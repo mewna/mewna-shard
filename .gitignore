@@ -1,0 +1,6 @@
+.idea/
+.vertx/
+boot.sh
+dependency-reduced-pom.xml
+mewna-shard.iml
+target/
