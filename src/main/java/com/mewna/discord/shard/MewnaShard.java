@@ -1,5 +1,6 @@
 package com.mewna.discord.shard;
 
+import com.google.common.collect.ImmutableList;
 import com.mewna.catnip.Catnip;
 import com.mewna.catnip.CatnipOptions;
 import com.mewna.catnip.cache.CacheFlag;
@@ -13,10 +14,14 @@ import com.mewna.catnip.entity.message.MessageType;
 import com.mewna.catnip.entity.user.User;
 import com.mewna.catnip.entity.user.VoiceState;
 import com.mewna.catnip.shard.CatnipShard;
+import com.mewna.catnip.shard.CatnipShard.ShardConnectState;
 import com.mewna.catnip.shard.DiscordEvent;
 import com.mewna.catnip.shard.DiscordEvent.Raw;
 import com.mewna.catnip.shard.GatewayOp;
+import com.mewna.catnip.shard.manager.DefaultShardManager;
+import com.mewna.catnip.shard.manager.ShardCondition;
 import com.mewna.lighthouse.Lighthouse;
+import gg.amy.singyeong.Dispatch;
 import gg.amy.singyeong.QueryBuilder;
 import gg.amy.singyeong.SingyeongClient;
 import gg.amy.singyeong.SingyeongType;
@@ -47,10 +52,7 @@ public final class MewnaShard {
     private SingyeongClient client;
     private Catnip catnip;
     private boolean handlersRegistered;
-    @Getter
     private int lastShardId = -1;
-    @Getter
-    private int lastLimit = -1;
     
     private MewnaShard() {
     }
@@ -58,7 +60,7 @@ public final class MewnaShard {
     public static void main(final String[] args) {
         new MewnaShard().start();
     }
-
+    
     private void start() {
         logger.info("Starting Mewna shard...");
         final int shardCount = Integer.parseInt(System.getenv("SHARD_COUNT"));
@@ -71,58 +73,11 @@ public final class MewnaShard {
                 .orElseGet(() -> "" + (9000 + new Random().nextInt(1000))));
         logger.info("Running healthcheck on port {}...", healthPort);
         lighthouse = Lighthouse.lighthouse(shardCount, healthPort, redisHost, redisAuth,
-                this::handleSharding, this::handlePubsub);
+                (a, b) -> null, this::handlePubsub);
         client = new SingyeongClient(System.getenv("SINGYEONG_DSN"), lighthouse.vertx(), "mewna-shard");
         client.connect()
                 .thenAccept(__ -> {
-                    client.onEvent(dispatch -> {
-                        final JsonObject d = dispatch.data();
-                        final String nonce = dispatch.nonce();
-                        if(d.containsKey("type")) {
-                            switch(d.getString("type").toUpperCase()) {
-                                case "VOICE_JOIN": {
-                                    if(lastShardId > -1) {
-                                        lighthouse.vertx().eventBus().send(CatnipShard.websocketMessageQueueAddress(lastShardId),
-                                                CatnipShard.basePayload(GatewayOp.VOICE_STATE_UPDATE, new JsonObject()
-                                                        .put("guild_id", d.getString("guild_id"))
-                                                        .put("channel_id", d.getString("channel_id"))
-                                                        .put("self_deaf", true)
-                                                        .put("self_mute", false)));
-                                    }
-                                    break;
-                                }
-                                case "VOICE_LEAVE": {
-                                    if(lastShardId > -1) {
-                                        //noinspection ConstantConditions
-                                        final JsonObject json = new JsonObject()
-                                                .put("type", "VOICE_LEAVE")
-                                                .put("guild_id", d.getString("guild_id"));
-                                        //logger.info("Sending to nekomimi node:\n{}", json.encodePrettily());
-                                        client.send("nekomimi", new QueryBuilder().build(), json);
-                                        lighthouse.vertx().eventBus().send(CatnipShard.websocketMessageQueueAddress(lastShardId),
-                                                CatnipShard.basePayload(GatewayOp.VOICE_STATE_UPDATE, new JsonObject()
-                                                        .put("guild_id", d.getString("guild_id"))
-                                                        .putNull("channel_id")
-                                                        .put("self_deaf", true)
-                                                        .put("self_mute", false)));
-                                    }
-                                    break;
-                                }
-                                case "CACHE": {
-                                    final JsonObject query = d.getJsonObject("query");
-                                    final CompletableFuture<Collection<JsonObject>> collectionFuture = cacheLookup(query);
-                                    collectionFuture.thenAccept(res -> {
-                                        final Optional<JsonObject> first = res.stream().filter(e -> !e.isEmpty()).findFirst();
-                                        final JsonObject cacheResult = first.orElse(new JsonObject());
-                                        // Since routing is effectively random, broadcast to maximize chance of the
-                                        // sender hearing it
-                                        client.broadcast("mewna-backend", nonce, new QueryBuilder().build(), cacheResult);
-                                    });
-                                    break;
-                                }
-                            }
-                        }
-                    });
+                    client.onEvent(this::handleSingyeongDispatch);
                     client.onInvalid(invalid -> {
                         logger.warn("Got invalid:");
                         logger.warn(invalid.reason());
@@ -144,49 +99,112 @@ public final class MewnaShard {
                 });
     }
     
-    private void startSharding() {
-        if(catnip != null) {
-            if(((SingleShardManager) catnip.shardManager()).booted().get()) {
-                logger.warn("Got request to start sharding, but we're already booted!",
-                        new Throwable("Asked to shard when already sharded!"));
-                return;
+    private void handleSingyeongDispatch(final Dispatch dispatch) {
+        final JsonObject d = dispatch.data();
+        final String nonce = dispatch.nonce();
+        if(d.containsKey("type")) {
+            switch(d.getString("type").toUpperCase()) {
+                case "VOICE_JOIN": {
+                    if(lastShardId > -1) {
+                        lighthouse.vertx().eventBus().send(CatnipShard.websocketMessageQueueAddress(lastShardId),
+                                CatnipShard.basePayload(GatewayOp.VOICE_STATE_UPDATE, new JsonObject()
+                                        .put("guild_id", d.getString("guild_id"))
+                                        .put("channel_id", d.getString("channel_id"))
+                                        .put("self_deaf", true)
+                                        .put("self_mute", false)));
+                    }
+                    break;
+                }
+                case "VOICE_LEAVE": {
+                    if(lastShardId > -1) {
+                        //noinspection ConstantConditions
+                        final JsonObject json = new JsonObject()
+                                .put("type", "VOICE_LEAVE")
+                                .put("guild_id", d.getString("guild_id"));
+                        //logger.info("Sending to nekomimi node:\n{}", json.encodePrettily());
+                        client.send("nekomimi", new QueryBuilder().build(), json);
+                        lighthouse.vertx().eventBus().send(CatnipShard.websocketMessageQueueAddress(lastShardId),
+                                CatnipShard.basePayload(GatewayOp.VOICE_STATE_UPDATE, new JsonObject()
+                                        .put("guild_id", d.getString("guild_id"))
+                                        .putNull("channel_id")
+                                        .put("self_deaf", true)
+                                        .put("self_mute", false)));
+                    }
+                    break;
+                }
+                case "CACHE": {
+                    final JsonObject query = d.getJsonObject("query");
+                    final CompletableFuture<Collection<JsonObject>> collectionFuture = cacheLookup(query);
+                    collectionFuture.thenAccept(res -> {
+                        final Optional<JsonObject> first = res.stream().filter(e -> !e.isEmpty()).findFirst();
+                        final JsonObject cacheResult = first.orElse(new JsonObject());
+                        // Since routing is effectively random, broadcast to maximize chance of the
+                        // sender hearing it
+                        client.broadcast("mewna-backend", nonce, new QueryBuilder().build(), cacheResult);
+                    });
+                    break;
+                }
             }
         }
-        lighthouse.startShard().setHandler(res -> {
-            if(res.succeeded()) {
-                logger.info("Fully booted!");
-            } else {
-                logger.error("Couldn't start shard!", res.cause());
-            }
-        });
     }
     
-    private Future<Boolean> handleSharding(final int id, final int limit) {
+    private void startSharding() {
+        c(lighthouse.service().lock())
+                .thenAccept(lock -> {
+                    if(lock) {
+                        c(lighthouse.service().getKnownShards())
+                                .thenAccept(ids -> {
+                                    final List<Integer> all = new ArrayList<>(lighthouse.service().getAllShards());
+                                    all.removeAll(ids);
+                                    if(!all.isEmpty()) {
+                                        lighthouse.service().shardId(all.get(0));
+                                        handleSharding(all.get(0), lighthouse.service().getAllShards().size());
+                                        lighthouse.service().unlock();
+                                        catnip.startShards();
+                                    } else {
+                                        logger.error("Too many shards!!!");
+                                        lighthouse.service().unlock();
+                                        scheduleSharding();
+                                    }
+                                })
+                                .exceptionally(e -> {
+                                    logger.info("Shard id collection failed, rescheduling...", e);
+                                    lighthouse.service().unlock();
+                                    scheduleSharding();
+                                    return null;
+                                });
+                    } else {
+                        scheduleSharding();
+                    }
+                })
+                .exceptionally(e -> {
+                    logger.warn("Locking failed, rescheduling...", e);
+                    scheduleSharding();
+                    return null;
+                });
+    }
+    
+    private void scheduleSharding() {
+        lighthouse.vertx().setTimer(500L, __ -> startSharding());
+    }
+    
+    private <T> CompletableFuture<T> c(@Nonnull final Future<T> f) {
+        return VertxCompletableFuture.from(lighthouse.vertx(), f);
+    }
+    
+    private void handleSharding(final int id, final int limit) {
         logger.info("Received shard id {} / {}", id, limit);
-        final Future<Boolean> future = Future.future();
+        lastShardId = id;
         
         // Don't initialize multiple times
         if(catnip == null) {
             catnip = Catnip.catnip(new CatnipOptions(System.getenv("TOKEN"))
-                            .shardManager(new SingleShardManager(id, limit, this))
-                            .cacheFlags(EnumSet.of(CacheFlag.DROP_EMOJI, CacheFlag.DROP_GAME_STATUSES))
-                            .cacheWorker(new ClearableCache()),
+                            .shardManager(new DefaultShardManager(limit, ImmutableList.of(id))
+                                    .addCondition(new DistributedShardingCondition()))
+                            .cacheFlags(EnumSet.of(CacheFlag.DROP_EMOJI, CacheFlag.DROP_GAME_STATUSES)),
                     lighthouse.vertx());
             registerHandlers(catnip, id);
         }
-        if(id != lastShardId && lastShardId != -1) {
-            // Clean cache to avoid leaking memes
-            logger.warn("New shard {} != old={}, clearing cache!", id, lastShardId);
-            ((ClearableCache) catnip.cacheWorker()).clear();
-        }
-        ((SingleShardManager) catnip.shardManager()).shardId(id);
-        ((SingleShardManager) catnip.shardManager()).shardCount(limit);
-        ((SingleShardManager) catnip.shardManager()).nextFuture(future);
-        lastShardId = id;
-        lastLimit = limit;
-        catnip.startShards();
-        
-        return future;
     }
     
     @SuppressWarnings("ConstantConditions")
@@ -365,6 +383,40 @@ public final class MewnaShard {
             }
         } else {
             return new JsonObject();
+        }
+    }
+    
+    @Accessors(fluent = true)
+    private final class DistributedShardingCondition implements ShardCondition {
+        @Override
+        public CompletableFuture<Boolean> preshard() {
+            final Future<Boolean> future = Future.future();
+            lighthouse().service().lock().setHandler(res -> {
+                if(res.succeeded() && res.result()) {
+                    future.complete(true);
+                } else {
+                    future.complete(false);
+                }
+            });
+            return VertxCompletableFuture.from(lighthouse().vertx(), future);
+        }
+        
+        @Override
+        public void postshard(@Nonnull final ShardConnectState shardConnectState) {
+            switch(shardConnectState) {
+                case READY: {
+                    lighthouse().service().unlock();
+                    break;
+                }
+                case FAILED: {
+                    lighthouse().service().unlock();
+                    break;
+                }
+                case RESUMED: {
+                    lighthouse().service().unlock();
+                    break;
+                }
+            }
         }
     }
 }
