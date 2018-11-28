@@ -47,14 +47,13 @@ import java.util.stream.Collectors;
 @SuppressWarnings("unused")
 public final class MewnaShard {
     private final Logger logger = LoggerFactory.getLogger(getClass());
+    private final Collection<String> readyGuilds = new HashSet<>();
     @Getter
     private Lighthouse lighthouse;
     private SingyeongClient client;
     private Catnip catnip;
     private boolean handlersRegistered;
     private int lastShardId = -1;
-    
-    private final Collection<String> readyGuilds = new HashSet<>();
     
     private MewnaShard() {
     }
@@ -203,6 +202,7 @@ public final class MewnaShard {
             catnip = Catnip.catnip(new CatnipOptions(System.getenv("TOKEN"))
                             .shardManager(new DefaultShardManager(limit, ImmutableList.of(id))
                                     .addCondition(new DistributedShardingCondition()))
+                            .cacheWorker(new ClearableCache())
                             .cacheFlags(EnumSet.of(CacheFlag.DROP_EMOJI, CacheFlag.DROP_GAME_STATUSES)),
                     lighthouse.vertx());
             registerHandlers(catnip, id);
@@ -282,6 +282,19 @@ public final class MewnaShard {
         catnip.on(DiscordEvent.GUILD_DELETE, e -> updateGuildMetadata(Raw.GUILD_DELETE, e.id()));
         // catnip.on(DiscordEvent.GUILD_AVAILABLE, e -> updateGuildMetadata(Raw.GUILD_AVAILABLE, e.id()));
         // catnip.on(DiscordEvent.GUILD_UNAVAILABLE, e -> updateGuildMetadata(Raw.GUILD_UNAVAILABLE, e.id()));
+        catnip.on(DiscordEvent.GUILD_AVAILABLE,
+                e -> catnip.logAdapter().info("{} became available | is ready guild: {} | total ready guilds: {} | cached guilds: {}",
+                        e.id(), readyGuilds.contains(e.id()), readyGuilds.size(), catnip.cache().guilds().size()));
+        /*
+        catnip.on(DiscordEvent.GUILD_AVAILABLE,
+                e -> catnip.logAdapter().info("{} guilds in non-copied cache",
+                        ((ClearableCache) catnip.cache()).guildCount()));
+        */
+        catnip.on(DiscordEvent.READY, e -> {
+            catnip.logAdapter().info("Recv'd {} guilds in READY", e.guilds().size());
+            catnip.vertx().setTimer(2500L, __ -> catnip.logAdapter()
+                    .info("2500ms after READY, we have {} guilds cached.", catnip.cache().guilds().size()));
+        });
     }
     
     private void updateGuildMetadata(final String event, final String id) {

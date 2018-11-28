@@ -1,6 +1,11 @@
 package com.mewna.discord.shard;
 
 import com.mewna.catnip.cache.MemoryEntityCache;
+import com.mewna.catnip.entity.guild.Guild;
+
+import javax.annotation.Nonnegative;
+import javax.annotation.Nonnull;
+import java.util.List;
 
 /**
  * @author amy
@@ -17,5 +22,10 @@ public class ClearableCache extends MemoryEntityCache {
         voiceStateCache.clear();
         presenceCache.clear();
         selfUser.set(null);
+    }
+    
+    @Nonnegative
+    public int guildCount() {
+        return guildCache.size();
     }
 }
