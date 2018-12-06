@@ -47,6 +47,7 @@ import java.util.stream.Collectors;
 @SuppressWarnings("unused")
 public final class MewnaShard {
     private final Logger logger = LoggerFactory.getLogger(getClass());
+    private final Collection<String> readyGuilds = new HashSet<>();
     @Getter
     private Lighthouse lighthouse;
     private SingyeongClient client;
@@ -82,11 +83,11 @@ public final class MewnaShard {
                         logger.warn("Got invalid:");
                         logger.warn(invalid.reason());
                     });
-                    logger.info("Connected to singyeong!");
                     lighthouse.init().setHandler(res -> {
                         if(res.succeeded()) {
                             logger.info("Started lighthouse!");
-                            startSharding();
+                            logger.info("Awaiting clustering...");
+                            lighthouse.vertx().setTimer(1000L, ___ -> startSharding());
                         } else {
                             logger.error("Couldn't start lighthouse!", res.cause());
                         }
@@ -201,6 +202,7 @@ public final class MewnaShard {
             catnip = Catnip.catnip(new CatnipOptions(System.getenv("TOKEN"))
                             .shardManager(new DefaultShardManager(limit, ImmutableList.of(id))
                                     .addCondition(new DistributedShardingCondition()))
+                            .cacheWorker(new ClearableCache())
                             .cacheFlags(EnumSet.of(CacheFlag.DROP_EMOJI, CacheFlag.DROP_GAME_STATUSES)),
                     lighthouse.vertx());
             registerHandlers(catnip, id);
@@ -218,6 +220,9 @@ public final class MewnaShard {
             logger.info("Logged in as {}#{}", ready.user().username(), ready.user().discriminator());
             logger.info("Trace: {}", ready.trace());
             client.updateMetadata("shard-id", SingyeongType.INTEGER, id);
+            readyGuilds.addAll(ready.guilds().stream().map(Snowflake::id).collect(Collectors.toSet()));
+            logger.info("Received {} unavailable guilds.", ready.guilds().size());
+            updateGuildMetadata(new ArrayList<>(readyGuilds));
         });
         // Push events to backend
         catnip.on(DiscordEvent.MESSAGE_CREATE, msg -> {
@@ -273,18 +278,41 @@ public final class MewnaShard {
                     client.send("nekomimi", new QueryBuilder().build(), json);
                 }));
         // Update metadata
-        catnip.on(DiscordEvent.GUILD_CREATE, __ -> updateGuildMetadata());
-        catnip.on(DiscordEvent.GUILD_DELETE, __ -> updateGuildMetadata());
-        catnip.on(DiscordEvent.GUILD_AVAILABLE, __ -> updateGuildMetadata());
-        catnip.on(DiscordEvent.GUILD_UNAVAILABLE, __ -> updateGuildMetadata());
+        catnip.on(DiscordEvent.GUILD_CREATE, e -> updateGuildMetadata(Raw.GUILD_CREATE, e.id()));
+        catnip.on(DiscordEvent.GUILD_DELETE, e -> updateGuildMetadata(Raw.GUILD_DELETE, e.id()));
+        // catnip.on(DiscordEvent.GUILD_AVAILABLE, e -> updateGuildMetadata(Raw.GUILD_AVAILABLE, e.id()));
+        // catnip.on(DiscordEvent.GUILD_UNAVAILABLE, e -> updateGuildMetadata(Raw.GUILD_UNAVAILABLE, e.id()));
+        catnip.on(DiscordEvent.GUILD_AVAILABLE,
+                e -> catnip.logAdapter().info("{} became available | is ready guild: {} | total ready guilds: {} | cached guilds: {}",
+                        e.id(), readyGuilds.contains(e.id()), readyGuilds.size(), catnip.cache().guilds().size()));
+        /*
+        catnip.on(DiscordEvent.GUILD_AVAILABLE,
+                e -> catnip.logAdapter().info("{} guilds in non-copied cache",
+                        ((ClearableCache) catnip.cache()).guildCount()));
+        */
+        catnip.on(DiscordEvent.READY, e -> {
+            catnip.logAdapter().info("Recv'd {} guilds in READY", e.guilds().size());
+            catnip.vertx().setTimer(2500L, __ -> catnip.logAdapter()
+                    .info("2500ms after READY, we have {} guilds cached.", catnip.cache().guilds().size()));
+        });
     }
     
-    private void updateGuildMetadata() {
-        client.updateMetadata("guilds", SingyeongType.LIST,
-                new JsonArray(catnip.cache().guilds().stream()
+    private void updateGuildMetadata(final String event, final String id) {
+        catnip.vertx().setTimer(1000L, __ -> {
+            // If the guild was deleted, or it was created and NOT a READY
+            // guild, we need to update our metadata
+            if(Raw.GUILD_DELETE.equals(event) || !readyGuilds.contains(id)) {
+                updateGuildMetadata(catnip.cache().guilds().stream()
                         .map(Snowflake::id)
-                        .collect(Collectors.toList())));
-        catnip.logAdapter().info("Updated {} guilds in metadata table.", catnip.cache().guilds().size());
+                        .collect(Collectors.toList()));
+            }
+        });
+    }
+    
+    private void updateGuildMetadata(final List<String> guildIds) {
+        client.updateMetadata("guilds", SingyeongType.LIST,
+                new JsonArray(guildIds));
+        catnip.logAdapter().info("Updated {} guilds in metadata table.", guildIds.size());
     }
     
     @SuppressWarnings("WeakerAccess")
