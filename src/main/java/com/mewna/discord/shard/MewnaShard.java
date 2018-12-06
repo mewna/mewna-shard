@@ -47,7 +47,6 @@ import java.util.stream.Collectors;
 @SuppressWarnings("unused")
 public final class MewnaShard {
     private final Logger logger = LoggerFactory.getLogger(getClass());
-    private final Collection<String> readyGuilds = new HashSet<>();
     @Getter
     private Lighthouse lighthouse;
     private SingyeongClient client;
@@ -220,9 +219,7 @@ public final class MewnaShard {
             logger.info("Logged in as {}#{}", ready.user().username(), ready.user().discriminator());
             logger.info("Trace: {}", ready.trace());
             client.updateMetadata("shard-id", SingyeongType.INTEGER, id);
-            readyGuilds.addAll(ready.guilds().stream().map(Snowflake::id).collect(Collectors.toSet()));
             logger.info("Received {} unavailable guilds.", ready.guilds().size());
-            updateGuildMetadata(new ArrayList<>(readyGuilds));
         });
         // Push events to backend
         catnip.on(DiscordEvent.MESSAGE_CREATE, msg -> {
@@ -280,33 +277,12 @@ public final class MewnaShard {
         // Update metadata
         catnip.on(DiscordEvent.GUILD_CREATE, e -> updateGuildMetadata(Raw.GUILD_CREATE, e.id()));
         catnip.on(DiscordEvent.GUILD_DELETE, e -> updateGuildMetadata(Raw.GUILD_DELETE, e.id()));
-        // catnip.on(DiscordEvent.GUILD_AVAILABLE, e -> updateGuildMetadata(Raw.GUILD_AVAILABLE, e.id()));
-        // catnip.on(DiscordEvent.GUILD_UNAVAILABLE, e -> updateGuildMetadata(Raw.GUILD_UNAVAILABLE, e.id()));
-        catnip.on(DiscordEvent.GUILD_AVAILABLE,
-                e -> catnip.logAdapter().info("{} became available | is ready guild: {} | total ready guilds: {} | cached guilds: {}",
-                        e.id(), readyGuilds.contains(e.id()), readyGuilds.size(), catnip.cache().guilds().size()));
-        /*
-        catnip.on(DiscordEvent.GUILD_AVAILABLE,
-                e -> catnip.logAdapter().info("{} guilds in non-copied cache",
-                        ((ClearableCache) catnip.cache()).guildCount()));
-        */
-        catnip.on(DiscordEvent.READY, e -> {
-            catnip.logAdapter().info("Recv'd {} guilds in READY", e.guilds().size());
-            catnip.vertx().setTimer(2500L, __ -> catnip.logAdapter()
-                    .info("2500ms after READY, we have {} guilds cached.", catnip.cache().guilds().size()));
-        });
+        catnip.on(DiscordEvent.GUILD_AVAILABLE, e -> updateGuildMetadata(Raw.GUILD_AVAILABLE, e.id()));
+        catnip.on(DiscordEvent.GUILD_UNAVAILABLE, e -> updateGuildMetadata(Raw.GUILD_UNAVAILABLE, e.id()));
     }
     
     private void updateGuildMetadata(final String event, final String id) {
-        catnip.vertx().setTimer(1000L, __ -> {
-            // If the guild was deleted, or it was created and NOT a READY
-            // guild, we need to update our metadata
-            if(Raw.GUILD_DELETE.equals(event) || !readyGuilds.contains(id)) {
-                updateGuildMetadata(catnip.cache().guilds().stream()
-                        .map(Snowflake::id)
-                        .collect(Collectors.toList()));
-            }
-        });
+        updateGuildMetadata(catnip.cache().guilds().stream().map(Snowflake::id).collect(Collectors.toList()));
     }
     
     private void updateGuildMetadata(final List<String> guildIds) {
