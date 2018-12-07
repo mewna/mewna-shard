@@ -5,5 +5,5 @@ jobs:
     steps:
     - checkout
     - run: docker login -u $DOCKER_USER -p $DOCKER_PASS
-    - run: docker build -t mewna/shards:$CIRCLE_BRANCH-$CIRCLE_BUILD_NUMBER .
-    - run: docker push mewna/shards:$CIRCLE_BRANCH-$CIRCLE_BUILD_NUMBER
+    - run: docker build -t mewna/shards:$CIRCLE_BRANCH-$CIRCLE_BUILD_NUM .
+    - run: docker push mewna/shards:$CIRCLE_BRANCH-$CIRCLE_BUILD_NUM
