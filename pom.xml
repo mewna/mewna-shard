@@ -18,9 +18,9 @@
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 
-        <catnip.version>5d34f02</catnip.version>
+        <catnip.version>c149dad</catnip.version>
         <lighthouse.version>c50f88e</lighthouse.version>
-        <singyeong.version>5c53983</singyeong.version>
+        <singyeong.version>d10544a</singyeong.version>
         <logback.version>1.2.3</logback.version>
     </properties>
 
