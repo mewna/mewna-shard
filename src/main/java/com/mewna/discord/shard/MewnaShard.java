@@ -254,6 +254,7 @@ public final class MewnaShard {
                                                     "   [roles] " + roles + '\n' +
                                                     "```");
                                         });
+                                break;
                             }
                             default: {
                                 msg.channel().sendMessage("what is " + c);
