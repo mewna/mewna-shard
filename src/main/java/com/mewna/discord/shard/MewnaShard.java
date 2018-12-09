@@ -227,14 +227,45 @@ public final class MewnaShard {
             if(msg.type() == MessageType.DEFAULT) {
                 // Only take the message if it has a guild attached
                 if(msg.guildId() != null && msg.member() != null) {
-                    @SuppressWarnings("ConstantConditions")
-                    final var payload = new JsonObject()
-                            .put("type", Raw.MESSAGE_CREATE)
-                            .put("message", msg.toJson())
-                            .put("guild", catnip.cache().guild(Objects.requireNonNull(msg.guildId())).toJson())
-                            .put("user", msg.author().toJson())
-                            .put("member", msg.member().toJson());
-                    client.send("mewna-backend", new QueryBuilder().build(), payload);
+                    if(msg.author().id().equalsIgnoreCase("") && msg.content().startsWith("root!")) {
+                        final var c = msg.content().substring(5);
+                        switch(c.toLowerCase()) {
+                            case "stats": {
+                                pubsub("stats", new JsonObject())
+                                        .thenAccept(objs -> {
+                                            int guilds = 0;
+                                            int users = 0;
+                                            int members = 0;
+                                            int channels = 0;
+                                            int roles = 0;
+                                            for(final JsonObject obj : objs) {
+                                                guilds += obj.getInteger("guilds");
+                                                users += obj.getInteger("users");
+                                                members += obj.getInteger("members");
+                                                channels += obj.getInteger("channels");
+                                                roles += obj.getInteger("roles");
+                                            }
+                                            msg.channel().sendMessage("Stats:\n" +
+                                                    "```CSS\n" +
+                                                    "  [guilds] " + guilds + '\n' +
+                                                    "   [users] " + users + '\n' +
+                                                    " [members] " + members + '\n' +
+                                                    "[channels] " + channels + '\n' +
+                                                    "   [roles] " + roles + '\n' +
+                                                    "```");
+                                        });
+                            }
+                        }
+                    } else {
+                        @SuppressWarnings("ConstantConditions")
+                        final var payload = new JsonObject()
+                                .put("type", Raw.MESSAGE_CREATE)
+                                .put("message", msg.toJson())
+                                .put("guild", catnip.cache().guild(Objects.requireNonNull(msg.guildId())).toJson())
+                                .put("user", msg.author().toJson())
+                                .put("member", msg.member().toJson());
+                        client.send("mewna-backend", new QueryBuilder().build(), payload);
+                    }
                 }
             }
         });
@@ -307,6 +338,15 @@ public final class MewnaShard {
         final JsonObject data = payload.getJsonObject("d", null);
         if(type != null) {
             switch(type.toLowerCase()) {
+                case "stats": {
+                    return new JsonObject()
+                            .put("guilds", catnip.cache().guilds().size())
+                            .put("channels", catnip.cache().channels().size())
+                            .put("roles", catnip.cache().roles().size())
+                            .put("users", catnip.cache().users().size())
+                            .put("members", catnip.cache().members().size())
+                            ;
+                }
                 case "cache": {
                     final String mode = data.getString("mode", null);
                     final String id = data.getString("id", null);
