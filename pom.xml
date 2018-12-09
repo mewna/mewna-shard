@@ -13,12 +13,18 @@
             <id>jitpack.io</id>
             <url>https://jitpack.io</url>
         </repository>
+
+        <repository>
+            <id>bintray-mewna-catnip</id>
+            <url>https://dl.bintray.com/mewna/catnip</url>
+        </repository>
     </repositories>
 
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 
-        <catnip.version>c149dad</catnip.version>
+        <!-- catnip.version>c149dad</catnip.version -->
+        <catnip.version>0.6.0</catnip.version>
         <lighthouse.version>c50f88e</lighthouse.version>
         <singyeong.version>d10544a</singyeong.version>
         <logback.version>1.2.3</logback.version>
