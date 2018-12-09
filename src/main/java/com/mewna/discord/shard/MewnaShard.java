@@ -256,6 +256,17 @@ public final class MewnaShard {
                                         });
                                 break;
                             }
+                            case "here": {
+                                msg.channel().sendMessage("Stats:\n" +
+                                        "```CSS\n" +
+                                        "   [guild] " + msg.guildId() + '\n' +
+                                        "   [users] " + catnip.cache().users().size() + '\n' +
+                                        " [members] " + msg.guild().memberCount() + '\n' +
+                                        "[channels] " + msg.guild().channels().size() + '\n' +
+                                        "   [roles] " + msg.guild().roles().size() + '\n' +
+                                        "```");
+                                break;
+                            }
                             default: {
                                 msg.channel().sendMessage("what is " + c);
                             }
