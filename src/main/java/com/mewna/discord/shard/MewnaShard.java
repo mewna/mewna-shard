@@ -134,10 +134,22 @@ public final class MewnaShard {
                 }
                 case "CACHE": {
                     final JsonObject query = d.getJsonObject("query");
+                    final String mode = query.getString("mode", null);
                     final CompletableFuture<Collection<JsonObject>> collectionFuture = cacheLookup(query);
                     collectionFuture.thenAccept(res -> {
-                        final Optional<JsonObject> first = res.stream().filter(e -> !e.isEmpty()).findFirst();
-                        final JsonObject cacheResult = first.orElse(new JsonObject());
+                        final JsonObject cacheResult;
+                        if(mode.equalsIgnoreCase("channels") || mode.equalsIgnoreCase("roles")) {
+                            cacheResult = res.stream()
+                                    .filter(e -> !e.isEmpty())
+                                    .filter(e -> !e.getJsonArray("_data").isEmpty())
+                                    .findFirst()
+                                    .orElse(new JsonObject().put("_type", mode).put("_data", new JsonArray()));
+                        } else {
+                            cacheResult = res.stream()
+                                    .filter(e -> !e.isEmpty())
+                                    .findFirst()
+                                    .orElse(new JsonObject());
+                        }
                         // Since routing is effectively random, broadcast to maximize chance of the
                         // sender hearing it
                         client.broadcast("mewna-backend", nonce, new QueryBuilder().build(), cacheResult);
