@@ -26,7 +26,7 @@
         <!-- catnip.version>c149dad</catnip.version -->
         <catnip.version>0.6.0</catnip.version>
         <lighthouse.version>c50f88e</lighthouse.version>
-        <singyeong.version>d10544a</singyeong.version>
+        <singyeong.version>c8739b1</singyeong.version>
         <logback.version>1.2.3</logback.version>
     </properties>
 
