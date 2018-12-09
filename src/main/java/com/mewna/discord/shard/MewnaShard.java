@@ -227,7 +227,7 @@ public final class MewnaShard {
             if(msg.type() == MessageType.DEFAULT) {
                 // Only take the message if it has a guild attached
                 if(msg.guildId() != null && msg.member() != null) {
-                    if(msg.author().id().equalsIgnoreCase("") && msg.content().startsWith("root!")) {
+                    if(msg.author().id().equalsIgnoreCase("128316294742147072") && msg.content().startsWith("root!")) {
                         final var c = msg.content().substring(5);
                         switch(c.toLowerCase()) {
                             case "stats": {
@@ -254,6 +254,9 @@ public final class MewnaShard {
                                                     "   [roles] " + roles + '\n' +
                                                     "```");
                                         });
+                            }
+                            default: {
+                                msg.channel().sendMessage("what is " + c);
                             }
                         }
                     } else {
