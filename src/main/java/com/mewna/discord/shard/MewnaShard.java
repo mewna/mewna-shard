@@ -74,7 +74,7 @@ public final class MewnaShard {
         logger.info("Running healthcheck on port {}...", healthPort);
         lighthouse = Lighthouse.lighthouse(shardCount, healthPort, redisHost, redisAuth,
                 (a, b) -> null, this::handlePubsub);
-        client = new SingyeongClient(System.getenv("SINGYEONG_DSN"), lighthouse.vertx(), "mewna-shard");
+        client = SingyeongClient.create(lighthouse.vertx(), System.getenv("SINGYEONG_DSN"));
         client.connect()
                 .thenAccept(__ -> {
                     client.onEvent(this::handleSingyeongDispatch);
