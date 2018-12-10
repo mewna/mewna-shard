@@ -286,7 +286,6 @@ public final class MewnaShard {
                             }
                             case "ram": {
                                 pubsub("ram", new JsonObject()).thenAccept(objs -> {
-                                    msg.channel().sendMessage("" + objs.size());
                                     try {
                                         long heapUsed = 0;
                                         long heapAllocated = 0;
@@ -298,16 +297,20 @@ public final class MewnaShard {
                                         long nonHeapInit = 0;
     
                                         for(final JsonObject o : objs) {
-                                            final JsonObject heap = o.getJsonObject("heap");
-                                            final JsonObject nonHeap = o.getJsonObject("nonheap");
-                                            heapUsed += heap.getLong("heapUsed");
-                                            heapAllocated += heap.getLong("heapAllocated");
-                                            heapTotal += heap.getLong("heapTotal");
-                                            heapInit += heap.getLong("heapInit");
-                                            nonHeapUsed += nonHeap.getLong("nonHeapUsed");
-                                            nonHeapAllocated += nonHeap.getLong("nonHeapAllocated");
-                                            nonHeapTotal += nonHeap.getLong("nonHeapTotal");
-                                            nonHeapInit += nonHeap.getLong("nonHeapInit");
+                                            try {
+                                                final JsonObject heap = o.getJsonObject("heap");
+                                                final JsonObject nonHeap = o.getJsonObject("nonheap");
+                                                heapUsed += heap.getLong("heapUsed");
+                                                heapAllocated += heap.getLong("heapAllocated");
+                                                heapTotal += heap.getLong("heapTotal");
+                                                heapInit += heap.getLong("heapInit");
+                                                nonHeapUsed += nonHeap.getLong("nonHeapUsed");
+                                                nonHeapAllocated += nonHeap.getLong("nonHeapAllocated");
+                                                nonHeapTotal += nonHeap.getLong("nonHeapTotal");
+                                                nonHeapInit += nonHeap.getLong("nonHeapInit");
+                                            } catch(final Exception e) {
+                                                Sentry.capture(e);
+                                            }
                                         }
     
                                         heapUsed /= 1024L * 1024L;
