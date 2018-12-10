@@ -285,44 +285,40 @@ public final class MewnaShard {
                                 break;
                             }
                             case "ram": {
-                                msg.channel().sendMessage("a");
                                 pubsub("ram", new JsonObject()).thenAccept(objs -> {
                                     msg.channel().sendMessage("" + objs.size());
                                     try {
-                                        msg.channel().sendMessage("b");
-                                        int heapUsed = 0;
-                                        int heapAllocated = 0;
-                                        int heapTotal = 0;
-                                        int heapInit = 0;
-                                        int nonHeapUsed = 0;
-                                        int nonHeapAllocated = 0;
-                                        int nonHeapTotal = 0;
-                                        int nonHeapInit = 0;
+                                        long heapUsed = 0;
+                                        long heapAllocated = 0;
+                                        long heapTotal = 0;
+                                        long heapInit = 0;
+                                        long nonHeapUsed = 0;
+                                        long nonHeapAllocated = 0;
+                                        long nonHeapTotal = 0;
+                                        long nonHeapInit = 0;
     
                                         for(final JsonObject o : objs) {
                                             final JsonObject heap = o.getJsonObject("heap");
                                             final JsonObject nonHeap = o.getJsonObject("nonheap");
-                                            heapUsed += heap.getInteger("heapUsed");
-                                            heapAllocated += heap.getInteger("heapAllocated");
-                                            heapTotal += heap.getInteger("heapTotal");
-                                            heapInit += heap.getInteger("heapInit");
-                                            nonHeapUsed += nonHeap.getInteger("nonHeapUsed");
-                                            nonHeapAllocated += nonHeap.getInteger("nonHeapAllocated");
-                                            nonHeapTotal += nonHeap.getInteger("nonHeapTotal");
-                                            nonHeapInit += nonHeap.getInteger("nonHeapInit");
+                                            heapUsed += heap.getLong("heapUsed");
+                                            heapAllocated += heap.getLong("heapAllocated");
+                                            heapTotal += heap.getLong("heapTotal");
+                                            heapInit += heap.getLong("heapInit");
+                                            nonHeapUsed += nonHeap.getLong("nonHeapUsed");
+                                            nonHeapAllocated += nonHeap.getLong("nonHeapAllocated");
+                                            nonHeapTotal += nonHeap.getLong("nonHeapTotal");
+                                            nonHeapInit += nonHeap.getLong("nonHeapInit");
                                         }
-                                        msg.channel().sendMessage("c");
     
-                                        heapUsed /= 1024 * 1024;
-                                        heapAllocated /= 1024 * 1024;
-                                        heapTotal /= 1024 * 1024;
-                                        heapInit /= 1024 * 1024;
-                                        nonHeapUsed /= 1024 * 1024;
-                                        nonHeapAllocated /= 1024 * 1024;
-                                        nonHeapTotal /= 1024 * 1024;
-                                        nonHeapInit /= 1024 * 1024;
+                                        heapUsed /= 1024L * 1024L;
+                                        heapAllocated /= 1024L * 1024L;
+                                        heapTotal /= 1024L * 1024L;
+                                        heapInit /= 1024L * 1024L;
+                                        nonHeapUsed /= 1024L * 1024L;
+                                        nonHeapAllocated /= 1024L * 1024L;
+                                        nonHeapTotal /= 1024L * 1024L;
+                                        nonHeapInit /= 1024L * 1024L;
     
-                                        msg.channel().sendMessage("d");
                                         msg.channel().sendMessage("RAM:\n" +
                                                 "```CSS\n" +
                                                 "[HEAP]\n" +
