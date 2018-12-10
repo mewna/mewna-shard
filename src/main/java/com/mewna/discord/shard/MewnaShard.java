@@ -304,10 +304,12 @@ public final class MewnaShard {
                                             try {
                                                 final JsonObject heap = o.getJsonObject("heap");
                                                 final JsonObject nonHeap = o.getJsonObject("nonheap");
+                                                
                                                 heapUsed += heap.getLong("used");
                                                 heapAllocated += heap.getLong("allocated");
                                                 heapTotal += heap.getLong("total");
-                                                heapInit += heap.getLong("onit");
+                                                heapInit += heap.getLong("init");
+                                                
                                                 nonHeapUsed += nonHeap.getLong("used");
                                                 nonHeapAllocated += nonHeap.getLong("allocated");
                                                 nonHeapTotal += nonHeap.getLong("total");
@@ -329,15 +331,15 @@ public final class MewnaShard {
                                         msg.channel().sendMessage("RAM:\n" +
                                                 "```CSS\n" +
                                                 "[HEAP]\n" +
-                                                "     [Init] " + heapInit + '\n' +
-                                                "     [Used] " + heapUsed + '\n' +
-                                                "    [Alloc] " + heapAllocated + '\n' +
-                                                "    [Total] " + heapTotal + '\n' +
+                                                "     [Init] " + heapInit + "MB\n" +
+                                                "     [Used] " + heapUsed + "MB\n" +
+                                                "    [Alloc] " + heapAllocated + "MB\n" +
+                                                "    [Total] " + heapTotal + "MB\n" +
                                                 "[NONHEAP]\n" +
-                                                "     [Init] " + nonHeapInit + '\n' +
-                                                "     [Used] " + nonHeapUsed + '\n' +
-                                                "    [Alloc] " + nonHeapAllocated + '\n' +
-                                                "    [Total] " + nonHeapTotal + '\n' +
+                                                "     [Init] " + nonHeapInit + "MB\n" +
+                                                "     [Used] " + nonHeapUsed + "MB\n" +
+                                                "    [Alloc] " + nonHeapAllocated + "MB\n" +
+                                                "    [Total] " + nonHeapTotal + "MB\n" +
                                                 "```");
                                     } catch(final Exception e) {
                                         Sentry.capture(e);
