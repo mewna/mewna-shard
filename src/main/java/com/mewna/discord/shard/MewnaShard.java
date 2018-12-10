@@ -307,6 +307,7 @@ public final class MewnaShard {
                                         nonHeapInit += nonHeap.getInteger("nonHeapInit");
                                     }
                                 });
+                                break;
                             }
                             default: {
                                 msg.channel().sendMessage("what is " + c);
