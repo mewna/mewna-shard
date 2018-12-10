@@ -306,6 +306,29 @@ public final class MewnaShard {
                                         nonHeapTotal += nonHeap.getInteger("nonHeapTotal");
                                         nonHeapInit += nonHeap.getInteger("nonHeapInit");
                                     }
+    
+                                    heapUsed /= 1024 * 1024;
+                                    heapAllocated /= 1024 * 1024;
+                                    heapTotal /= 1024 * 1024;
+                                    heapInit /= 1024 * 1024;
+                                    nonHeapUsed /= 1024 * 1024;
+                                    nonHeapAllocated /= 1024 * 1024;
+                                    nonHeapTotal /= 1024 * 1024;
+                                    nonHeapInit /= 1024 * 1024;
+                                    
+                                    msg.channel().sendMessage("RAM:\n" +
+                                            "```CSS\n" +
+                                            "[HEAP]\n" +
+                                            "     [Init] " + heapInit + '\n' +
+                                            "     [Used] " + heapUsed + '\n' +
+                                            "    [Alloc] " + heapAllocated + '\n' +
+                                            "    [Total] " + heapTotal + '\n' +
+                                            "[NONHEAP]\n" +
+                                            "     [Init] " + nonHeapInit + '\n' +
+                                            "     [Used] " + nonHeapUsed + '\n' +
+                                            "    [Alloc] " + nonHeapAllocated + '\n' +
+                                            "    [Total] " + nonHeapTotal + '\n' +
+                                            "```");
                                 });
                                 break;
                             }
