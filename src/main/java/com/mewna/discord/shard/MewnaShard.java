@@ -285,8 +285,11 @@ public final class MewnaShard {
                                 break;
                             }
                             case "ram": {
+                                msg.channel().sendMessage("a");
                                 pubsub("ram", new JsonObject()).thenAccept(objs -> {
+                                    msg.channel().sendMessage("" + objs.size());
                                     try {
+                                        msg.channel().sendMessage("b");
                                         int heapUsed = 0;
                                         int heapAllocated = 0;
                                         int heapTotal = 0;
@@ -308,6 +311,7 @@ public final class MewnaShard {
                                             nonHeapTotal += nonHeap.getInteger("nonHeapTotal");
                                             nonHeapInit += nonHeap.getInteger("nonHeapInit");
                                         }
+                                        msg.channel().sendMessage("c");
     
                                         heapUsed /= 1024 * 1024;
                                         heapAllocated /= 1024 * 1024;
@@ -318,6 +322,7 @@ public final class MewnaShard {
                                         nonHeapTotal /= 1024 * 1024;
                                         nonHeapInit /= 1024 * 1024;
     
+                                        msg.channel().sendMessage("d");
                                         msg.channel().sendMessage("RAM:\n" +
                                                 "```CSS\n" +
                                                 "[HEAP]\n" +
