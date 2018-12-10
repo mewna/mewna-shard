@@ -35,6 +35,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.annotation.Nonnull;
+import java.lang.management.ManagementFactory;
+import java.lang.management.MemoryUsage;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
@@ -46,6 +48,7 @@ import java.util.stream.Collectors;
 @Accessors(fluent = true)
 @SuppressWarnings("unused")
 public final class MewnaShard {
+    private static final String INTERNAL_PREFIX = "amyware!";
     private final Logger logger = LoggerFactory.getLogger(getClass());
     @Getter
     private Lighthouse lighthouse;
@@ -239,8 +242,9 @@ public final class MewnaShard {
             if(msg.type() == MessageType.DEFAULT) {
                 // Only take the message if it has a guild attached
                 if(msg.guildId() != null && msg.member() != null) {
-                    if(msg.author().id().equalsIgnoreCase("128316294742147072") && msg.content().startsWith("root!")) {
-                        final var c = msg.content().substring(5);
+                    if(msg.author().id().equalsIgnoreCase("128316294742147072")
+                            && msg.content().startsWith(INTERNAL_PREFIX)) {
+                        final var c = msg.content().substring(INTERNAL_PREFIX.length());
                         switch(c.toLowerCase()) {
                             case "stats": {
                                 pubsub("stats", new JsonObject())
@@ -278,6 +282,44 @@ public final class MewnaShard {
                                         "   [roles] " + msg.guild().roles().size() + '\n' +
                                         "```");
                                 break;
+                            }
+                            case "ram": {
+                                new JsonObject()
+                                        .put("heap", new JsonObject()
+                                                .put("used", heap.getUsed())
+                                                .put("allocated", heap.getCommitted())
+                                                .put("total", heap.getMax())
+                                                .put("init", heap.getInit())
+                                        )
+                                        .put("nonheap", new JsonObject()
+                                                .put("used", nonHeap.getUsed())
+                                                .put("allocated", nonHeap.getCommitted())
+                                                .put("total", nonHeap.getMax())
+                                                .put("init", nonHeap.getInit())
+                                        );
+                                pubsub("ram", new JsonObject()).thenAccept(objs -> {
+                                    int heapUsed = 0;
+                                    int heapAllocated = 0;
+                                    int heapTotal = 0;
+                                    int heapInit = 0;
+                                    int nonHeapUsed = 0;
+                                    int nonHeapAllocated = 0;
+                                    int nonHeapTotal = 0;
+                                    int nonHeapInit = 0;
+    
+                                    for(final JsonObject o : objs) {
+                                        final JsonObject heap = o.getJsonObject("heap");
+                                        final JsonObject nonHeap = o.getJsonObject("nonheap");
+                                        heapUsed += heap.getInteger("heapUsed");
+                                        heapAllocated += heap.getInteger("heapAllocated");
+                                        heapTotal += heap.getInteger("heapTotal");
+                                        heapInit += heap.getInteger("heapInit");
+                                        nonHeapUsed += nonHeap.getInteger("nonHeapUsed");
+                                        nonHeapAllocated += nonHeap.getInteger("nonHeapAllocated");
+                                        nonHeapTotal += nonHeap.getInteger("nonHeapTotal");
+                                        nonHeapInit += nonHeap.getInteger("nonHeapInit");
+                                    }
+                                });
                             }
                             default: {
                                 msg.channel().sendMessage("what is " + c);
@@ -365,6 +407,23 @@ public final class MewnaShard {
         final JsonObject data = payload.getJsonObject("d", null);
         if(type != null) {
             switch(type.toLowerCase()) {
+                case "ram": {
+                    final MemoryUsage heap = ManagementFactory.getMemoryMXBean().getHeapMemoryUsage();
+                    final MemoryUsage nonHeap = ManagementFactory.getMemoryMXBean().getNonHeapMemoryUsage();
+                    return new JsonObject()
+                            .put("heap", new JsonObject()
+                                    .put("used", heap.getUsed())
+                                    .put("allocated", heap.getCommitted())
+                                    .put("total", heap.getMax())
+                                    .put("init", heap.getInit())
+                            )
+                            .put("nonheap", new JsonObject()
+                                    .put("used", nonHeap.getUsed())
+                                    .put("allocated", nonHeap.getCommitted())
+                                    .put("total", nonHeap.getMax())
+                                    .put("init", nonHeap.getInit())
+                            );
+                }
                 case "stats": {
                     return new JsonObject()
                             .put("guilds", catnip.cache().guilds().size())
