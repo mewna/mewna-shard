@@ -334,6 +334,9 @@ public final class MewnaShard {
                                     } catch(final Exception e) {
                                         Sentry.capture(e);
                                     }
+                                }).exceptionally(e -> {
+                                    Sentry.capture(e);
+                                    return null;
                                 });
                                 break;
                             }
