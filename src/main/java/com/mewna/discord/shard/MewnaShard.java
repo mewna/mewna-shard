@@ -284,19 +284,6 @@ public final class MewnaShard {
                                 break;
                             }
                             case "ram": {
-                                new JsonObject()
-                                        .put("heap", new JsonObject()
-                                                .put("used", heap.getUsed())
-                                                .put("allocated", heap.getCommitted())
-                                                .put("total", heap.getMax())
-                                                .put("init", heap.getInit())
-                                        )
-                                        .put("nonheap", new JsonObject()
-                                                .put("used", nonHeap.getUsed())
-                                                .put("allocated", nonHeap.getCommitted())
-                                                .put("total", nonHeap.getMax())
-                                                .put("init", nonHeap.getInit())
-                                        );
                                 pubsub("ram", new JsonObject()).thenAccept(objs -> {
                                     int heapUsed = 0;
                                     int heapAllocated = 0;
