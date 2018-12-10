@@ -302,17 +302,16 @@ public final class MewnaShard {
     
                                         for(final JsonObject o : objs) {
                                             try {
-                                                System.out.println(o.encodePrettily());
                                                 final JsonObject heap = o.getJsonObject("heap");
                                                 final JsonObject nonHeap = o.getJsonObject("nonheap");
-                                                heapUsed += heap.getLong("heapUsed");
-                                                heapAllocated += heap.getLong("heapAllocated");
-                                                heapTotal += heap.getLong("heapTotal");
-                                                heapInit += heap.getLong("heapInit");
-                                                nonHeapUsed += nonHeap.getLong("nonHeapUsed");
-                                                nonHeapAllocated += nonHeap.getLong("nonHeapAllocated");
-                                                nonHeapTotal += nonHeap.getLong("nonHeapTotal");
-                                                nonHeapInit += nonHeap.getLong("nonHeapInit");
+                                                heapUsed += heap.getLong("used");
+                                                heapAllocated += heap.getLong("allocated");
+                                                heapTotal += heap.getLong("total");
+                                                heapInit += heap.getLong("onit");
+                                                nonHeapUsed += nonHeap.getLong("used");
+                                                nonHeapAllocated += nonHeap.getLong("allocated");
+                                                nonHeapTotal += nonHeap.getLong("total");
+                                                nonHeapInit += nonHeap.getLong("init");
                                             } catch(final Exception e) {
                                                 Sentry.capture(e);
                                             }
