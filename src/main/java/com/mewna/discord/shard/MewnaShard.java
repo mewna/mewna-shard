@@ -25,6 +25,7 @@ import gg.amy.singyeong.Dispatch;
 import gg.amy.singyeong.QueryBuilder;
 import gg.amy.singyeong.SingyeongClient;
 import gg.amy.singyeong.SingyeongType;
+import io.sentry.Sentry;
 import io.vertx.core.Future;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
@@ -285,50 +286,54 @@ public final class MewnaShard {
                             }
                             case "ram": {
                                 pubsub("ram", new JsonObject()).thenAccept(objs -> {
-                                    int heapUsed = 0;
-                                    int heapAllocated = 0;
-                                    int heapTotal = 0;
-                                    int heapInit = 0;
-                                    int nonHeapUsed = 0;
-                                    int nonHeapAllocated = 0;
-                                    int nonHeapTotal = 0;
-                                    int nonHeapInit = 0;
+                                    try {
+                                        int heapUsed = 0;
+                                        int heapAllocated = 0;
+                                        int heapTotal = 0;
+                                        int heapInit = 0;
+                                        int nonHeapUsed = 0;
+                                        int nonHeapAllocated = 0;
+                                        int nonHeapTotal = 0;
+                                        int nonHeapInit = 0;
     
-                                    for(final JsonObject o : objs) {
-                                        final JsonObject heap = o.getJsonObject("heap");
-                                        final JsonObject nonHeap = o.getJsonObject("nonheap");
-                                        heapUsed += heap.getInteger("heapUsed");
-                                        heapAllocated += heap.getInteger("heapAllocated");
-                                        heapTotal += heap.getInteger("heapTotal");
-                                        heapInit += heap.getInteger("heapInit");
-                                        nonHeapUsed += nonHeap.getInteger("nonHeapUsed");
-                                        nonHeapAllocated += nonHeap.getInteger("nonHeapAllocated");
-                                        nonHeapTotal += nonHeap.getInteger("nonHeapTotal");
-                                        nonHeapInit += nonHeap.getInteger("nonHeapInit");
+                                        for(final JsonObject o : objs) {
+                                            final JsonObject heap = o.getJsonObject("heap");
+                                            final JsonObject nonHeap = o.getJsonObject("nonheap");
+                                            heapUsed += heap.getInteger("heapUsed");
+                                            heapAllocated += heap.getInteger("heapAllocated");
+                                            heapTotal += heap.getInteger("heapTotal");
+                                            heapInit += heap.getInteger("heapInit");
+                                            nonHeapUsed += nonHeap.getInteger("nonHeapUsed");
+                                            nonHeapAllocated += nonHeap.getInteger("nonHeapAllocated");
+                                            nonHeapTotal += nonHeap.getInteger("nonHeapTotal");
+                                            nonHeapInit += nonHeap.getInteger("nonHeapInit");
+                                        }
+    
+                                        heapUsed /= 1024 * 1024;
+                                        heapAllocated /= 1024 * 1024;
+                                        heapTotal /= 1024 * 1024;
+                                        heapInit /= 1024 * 1024;
+                                        nonHeapUsed /= 1024 * 1024;
+                                        nonHeapAllocated /= 1024 * 1024;
+                                        nonHeapTotal /= 1024 * 1024;
+                                        nonHeapInit /= 1024 * 1024;
+    
+                                        msg.channel().sendMessage("RAM:\n" +
+                                                "```CSS\n" +
+                                                "[HEAP]\n" +
+                                                "     [Init] " + heapInit + '\n' +
+                                                "     [Used] " + heapUsed + '\n' +
+                                                "    [Alloc] " + heapAllocated + '\n' +
+                                                "    [Total] " + heapTotal + '\n' +
+                                                "[NONHEAP]\n" +
+                                                "     [Init] " + nonHeapInit + '\n' +
+                                                "     [Used] " + nonHeapUsed + '\n' +
+                                                "    [Alloc] " + nonHeapAllocated + '\n' +
+                                                "    [Total] " + nonHeapTotal + '\n' +
+                                                "```");
+                                    } catch(final Exception e) {
+                                        Sentry.capture(e);
                                     }
-    
-                                    heapUsed /= 1024 * 1024;
-                                    heapAllocated /= 1024 * 1024;
-                                    heapTotal /= 1024 * 1024;
-                                    heapInit /= 1024 * 1024;
-                                    nonHeapUsed /= 1024 * 1024;
-                                    nonHeapAllocated /= 1024 * 1024;
-                                    nonHeapTotal /= 1024 * 1024;
-                                    nonHeapInit /= 1024 * 1024;
-                                    
-                                    msg.channel().sendMessage("RAM:\n" +
-                                            "```CSS\n" +
-                                            "[HEAP]\n" +
-                                            "     [Init] " + heapInit + '\n' +
-                                            "     [Used] " + heapUsed + '\n' +
-                                            "    [Alloc] " + heapAllocated + '\n' +
-                                            "    [Total] " + heapTotal + '\n' +
-                                            "[NONHEAP]\n" +
-                                            "     [Init] " + nonHeapInit + '\n' +
-                                            "     [Used] " + nonHeapUsed + '\n' +
-                                            "    [Alloc] " + nonHeapAllocated + '\n' +
-                                            "    [Total] " + nonHeapTotal + '\n' +
-                                            "```");
                                 });
                                 break;
                             }
