@@ -67,6 +67,9 @@ public final class MewnaShard {
     
     private void start() {
         logger.info("Starting Mewna shard...");
+        if(System.getenv("SENTRY_DSN") != null) {
+            Sentry.init(System.getenv("SENTRY_DSN"));
+        }
         final int shardCount = Integer.parseInt(System.getenv("SHARD_COUNT"));
         if(shardCount <= 0) {
             throw new IllegalStateException("shard count " + shardCount + " <= 0!!!");
