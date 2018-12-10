@@ -26,6 +26,7 @@ import gg.amy.singyeong.QueryBuilder;
 import gg.amy.singyeong.SingyeongClient;
 import gg.amy.singyeong.SingyeongType;
 import io.sentry.Sentry;
+import io.sentry.event.EventBuilder;
 import io.vertx.core.Future;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
@@ -301,6 +302,7 @@ public final class MewnaShard {
     
                                         for(final JsonObject o : objs) {
                                             try {
+                                                System.out.println(o.encodePrettily());
                                                 final JsonObject heap = o.getJsonObject("heap");
                                                 final JsonObject nonHeap = o.getJsonObject("nonheap");
                                                 heapUsed += heap.getLong("heapUsed");
