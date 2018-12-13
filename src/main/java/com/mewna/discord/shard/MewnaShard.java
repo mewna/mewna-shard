@@ -21,12 +21,14 @@ import com.mewna.catnip.shard.GatewayOp;
 import com.mewna.catnip.shard.manager.DefaultShardManager;
 import com.mewna.catnip.shard.manager.ShardCondition;
 import com.mewna.lighthouse.Lighthouse;
+import com.timgroup.statsd.NoOpStatsDClient;
+import com.timgroup.statsd.NonBlockingStatsDClient;
+import com.timgroup.statsd.StatsDClient;
 import gg.amy.singyeong.Dispatch;
 import gg.amy.singyeong.QueryBuilder;
 import gg.amy.singyeong.SingyeongClient;
 import gg.amy.singyeong.SingyeongType;
 import io.sentry.Sentry;
-import io.sentry.event.EventBuilder;
 import io.vertx.core.Future;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
@@ -57,9 +59,17 @@ public final class MewnaShard {
     private SingyeongClient client;
     private Catnip catnip;
     private boolean handlersRegistered;
+    @Getter
     private int lastShardId = -1;
+    @Getter
+    private final StatsDClient statsClient;
     
     private MewnaShard() {
+        if(System.getenv("STATSD_ENABLED") != null) {
+            statsClient = new NonBlockingStatsDClient("v2.shards", System.getenv("STATSD_HOST"), 8125);
+        } else {
+            statsClient = new NoOpStatsDClient();
+        }
     }
     
     public static void main(final String[] args) {
@@ -235,6 +245,8 @@ public final class MewnaShard {
         }
         handlersRegistered = true;
         
+        catnip.loadExtension(new EventInspectorExtension(this));
+        
         catnip.on(DiscordEvent.READY, ready -> {
             logger.info("Logged in as {}#{}", ready.user().username(), ready.user().discriminator());
             logger.info("Trace: {}", ready.trace());
@@ -299,7 +311,7 @@ public final class MewnaShard {
                                         long nonHeapAllocated = 0;
                                         long nonHeapTotal = 0;
                                         long nonHeapInit = 0;
-    
+                                        
                                         for(final JsonObject o : objs) {
                                             try {
                                                 final JsonObject heap = o.getJsonObject("heap");
@@ -318,7 +330,7 @@ public final class MewnaShard {
                                                 Sentry.capture(e);
                                             }
                                         }
-    
+                                        
                                         heapUsed /= 1024L * 1024L;
                                         heapAllocated /= 1024L * 1024L;
                                         heapTotal /= 1024L * 1024L;
@@ -327,7 +339,7 @@ public final class MewnaShard {
                                         nonHeapAllocated /= 1024L * 1024L;
                                         nonHeapTotal /= 1024L * 1024L;
                                         nonHeapInit /= 1024L * 1024L;
-    
+                                        
                                         msg.channel().sendMessage("RAM:\n" +
                                                 "```CSS\n" +
                                                 "[HEAP]\n" +
@@ -415,6 +427,9 @@ public final class MewnaShard {
     }
     
     private void updateGuildMetadata(final List<String> guildIds) {
+        if(lastShardId > -1) {
+            statsClient.gauge("guilds", guildIds.size(), "shard:" + lastShardId);
+        }
         client.updateMetadata("guilds", SingyeongType.LIST,
                 new JsonArray(guildIds));
         catnip.logAdapter().info("Updated {} guilds in metadata table.", guildIds.size());
@@ -432,6 +447,9 @@ public final class MewnaShard {
     }
     
     private JsonObject handlePubsub(final JsonObject payload) {
+        if(lastShardId > -1) {
+            statsClient.increment("pubsubMessages", 1, "shard:" + lastShardId);
+        }
         final String type = payload.getString("dist:type", null);
         final JsonObject data = payload.getJsonObject("d", null);
         if(type != null) {

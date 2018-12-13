@@ -24,12 +24,13 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 
         <!-- catnip.version>c149dad</catnip.version -->
-        <catnip.version>0.6.0</catnip.version>
+        <catnip.version>0.7.1</catnip.version>
         <lighthouse.version>c50f88e</lighthouse.version>
         <singyeong.version>03eaacc</singyeong.version>
         <logback.version>1.2.3</logback.version>
-        <sentry.version>1.7.5</sentry.version>
         <jackson.version>2.9.6</jackson.version>
+        <sentry.version>1.7.5</sentry.version>
+        <dogstatsd.version>2.6.1</dogstatsd.version>
     </properties>
 
     <dependencies>
@@ -85,6 +86,13 @@
             <groupId>io.sentry</groupId>
             <artifactId>sentry</artifactId>
             <version>${sentry.version}</version>
+        </dependency>
+
+        <!-- dogstatsd -->
+        <dependency>
+            <groupId>com.datadoghq</groupId>
+            <artifactId>java-dogstatsd-client</artifactId>
+            <version>${dogstatsd.version}</version>
         </dependency>
     </dependencies>
 
