@@ -243,6 +243,22 @@ public final class MewnaShard {
             return;
         }
         handlersRegistered = true;
+    
+        //noinspection CodeBlock2Expr
+        catnip.vertx().setPeriodic(15000L, __ -> {
+            catnip.shardManager().isConnected(lastShardId).thenAccept(b -> {
+                if(lastShardId > -1 && b) {
+                    statsClient.gauge("members", catnip.cache().members().size(), "shard:" + lastShardId);
+                    statsClient.gauge("users", catnip.cache().users().size(), "shard:" + lastShardId);
+                    statsClient.gauge("guilds", catnip.cache().guilds().size(), "shard:" + lastShardId);
+                    statsClient.gauge("roles", catnip.cache().roles().size(), "shard:" + lastShardId);
+                    statsClient.gauge("presences", catnip.cache().presences().size(), "shard:" + lastShardId);
+                    statsClient.gauge("channels", catnip.cache().channels().size(), "shard:" + lastShardId);
+                    statsClient.gauge("emojis", catnip.cache().emojis().size(), "shard:" + lastShardId);
+                    statsClient.gauge("voiceStates", catnip.cache().voiceStates().size(), "shard:" + lastShardId);
+                }
+            });
+        });
         
         catnip.loadExtension(new EventInspectorExtension(this))
                 .loadExtension(new InternalCommandExtension(this));
@@ -278,6 +294,8 @@ public final class MewnaShard {
                     .put("user", catnip.cache().user(member.id()).toJson())
                     .put("member", member.toJson());
             client.send("mewna-backend", new QueryBuilder().build(), payload);
+            statsClient.gauge("members", catnip.cache().members().size(), "shard:" + lastShardId);
+            statsClient.gauge("users", catnip.cache().users().size(), "shard:" + lastShardId);
         });
         catnip.on(DiscordEvent.GUILD_MEMBER_REMOVE, member -> {
             @SuppressWarnings("ConstantConditions")
@@ -287,6 +305,8 @@ public final class MewnaShard {
                     .put("user", catnip.cache().user(member.id()).toJson())
                     .put("member", member.toJson());
             client.send("mewna-backend", new QueryBuilder().build(), payload);
+            statsClient.gauge("members", catnip.cache().members().size(), "shard:" + lastShardId);
+            statsClient.gauge("users", catnip.cache().users().size(), "shard:" + lastShardId);
         });
         // Voice
         catnip.on(DiscordEvent.VOICE_SERVER_UPDATE, vsu ->
