@@ -133,16 +133,14 @@ public class InternalCommandExtension extends AbstractExtension {
         });
         
         catnip().on(DiscordEvent.MESSAGE_CREATE, msg -> {
-            // Only take default messages
             if(msg.type() == MessageType.DEFAULT) {
-                // Only take the message if it has a guild attached
                 if(msg.guildId() != null && msg.member() != null) {
                     if(msg.author().id().equalsIgnoreCase("128316294742147072")
                             && msg.content().startsWith(INTERNAL_PREFIX)) {
                         final var c = msg.content().substring(INTERNAL_PREFIX.length());
                         final var split = c.split("\\s+", 2);
                         final var name = split[0].toLowerCase();
-                        final var args = split[1];
+                        final var args = split.length > 1 ? split[1] : "";
                         
                         if(commands.containsKey(name)) {
                             commands.get(name).accept(msg);
