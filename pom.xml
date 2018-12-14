@@ -25,7 +25,7 @@
 
         <!-- catnip.version>c149dad</catnip.version -->
         <catnip.version>0.8.2</catnip.version>
-        <lighthouse.version>c50f88e</lighthouse.version>
+        <lighthouse.version>475b12d</lighthouse.version>
         <singyeong.version>03eaacc</singyeong.version>
         <logback.version>1.2.3</logback.version>
         <jackson.version>2.9.6</jackson.version>
