@@ -56,6 +56,12 @@ public class InternalCommandExtension extends AbstractExtension {
                                 "[channels] " + channels + '\n' +
                                 "   [roles] " + roles + '\n' +
                                 "```");
+                    })
+                    .exceptionally(e -> {
+                        msg.channel().sendMessage("Failed with error (Check sentry)");
+                        Sentry.capture(e);
+                        e.printStackTrace();
+                        return null;
                     });
         });
         //noinspection CodeBlock2Expr
@@ -127,7 +133,9 @@ public class InternalCommandExtension extends AbstractExtension {
                     Sentry.capture(e);
                 }
             }).exceptionally(e -> {
+                msg.channel().sendMessage("Failed with error (Check sentry)");
                 Sentry.capture(e);
+                e.printStackTrace();
                 return null;
             });
         });
