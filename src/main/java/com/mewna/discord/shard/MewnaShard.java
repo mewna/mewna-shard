@@ -178,7 +178,6 @@ public final class MewnaShard {
     }
     
     private void startSharding() {
-        lighthouse.release();
         c(lighthouse.service().lock())
                 .thenAccept(lock -> {
                     if(lock) {
