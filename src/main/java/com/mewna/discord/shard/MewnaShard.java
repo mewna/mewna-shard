@@ -362,6 +362,9 @@ public final class MewnaShard {
     }
     
     private JsonObject handlePubsub(final JsonObject payload) {
+        if(lastShardId == -1 || catnip == null) {
+            return new JsonObject();
+        }
         if(lastShardId > -1) {
             statsClient.increment("pubsubMessages", 1, "shard:" + lastShardId);
         }
