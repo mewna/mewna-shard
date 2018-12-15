@@ -226,15 +226,19 @@ public final class MewnaShard {
         lastShardId = id;
         
         // Don't initialize multiple times
-        if(catnip == null) {
-            catnip = Catnip.catnip(new CatnipOptions(System.getenv("TOKEN"))
-                            .shardManager(new DefaultShardManager(limit, ImmutableList.of(id))
-                                    .addCondition(new DistributedShardingCondition()))
-                            .cacheWorker(new ClearableCache())
-                            .cacheFlags(EnumSet.of(CacheFlag.DROP_EMOJI, CacheFlag.DROP_GAME_STATUSES)),
-                    lighthouse.vertx());
-            registerHandlers(catnip, id);
-        }
+        lighthouse.vertx().executeBlocking(future -> {
+            if(catnip == null) {
+                catnip = Catnip.catnip(new CatnipOptions(System.getenv("TOKEN"))
+                                .shardManager(new DefaultShardManager(limit, ImmutableList.of(id))
+                                        .addCondition(new DistributedShardingCondition()))
+                                .cacheWorker(new ClearableCache())
+                                .cacheFlags(EnumSet.of(CacheFlag.DROP_EMOJI, CacheFlag.DROP_GAME_STATUSES)),
+                        lighthouse.vertx());
+                registerHandlers(catnip, id);
+            }
+            future.complete(null);
+        }, res -> {
+        });
     }
     
     @SuppressWarnings("ConstantConditions")
