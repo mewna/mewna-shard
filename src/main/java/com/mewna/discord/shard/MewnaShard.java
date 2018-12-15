@@ -1,8 +1,6 @@
 package com.mewna.discord.shard;
 
 import com.mewna.catnip.Catnip;
-import com.mewna.catnip.CatnipOptions;
-import com.mewna.catnip.cache.CacheFlag;
 import com.mewna.catnip.entity.Entity;
 import com.mewna.catnip.entity.Snowflake;
 import com.mewna.catnip.entity.channel.Channel;
@@ -33,7 +31,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.annotation.Nonnull;
-import java.util.*;
+import java.util.List;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 /**
@@ -68,15 +67,8 @@ public final class MewnaShard {
         if(System.getenv("SENTRY_DSN") != null) {
             Sentry.init(System.getenv("SENTRY_DSN"));
         }
-        final int shardCount = Integer.parseInt(System.getenv("SHARD_COUNT"));
-        if(shardCount <= 0) {
-            throw new IllegalStateException("shard count " + shardCount + " <= 0!!!");
-        }
         final String redisHost = System.getenv("REDIS_HOST");
         final String redisAuth = System.getenv("REDIS_AUTH");
-        final int healthPort = Integer.parseInt(Optional.ofNullable(System.getenv("PORT"))
-                .orElseGet(() -> "" + (9000 + new Random().nextInt(1000))));
-        logger.info("Running healthcheck on port {}...", healthPort);
         client = SingyeongClient.create(vertx, System.getenv("SINGYEONG_DSN"));
         client.connect()
                 .thenAccept(__ -> {
@@ -303,9 +295,9 @@ public final class MewnaShard {
         catnip.on(DiscordEvent.GUILD_DELETE, e -> updateGuildMetadata(Raw.GUILD_DELETE, e.id()));
         catnip.on(DiscordEvent.GUILD_AVAILABLE, e -> updateGuildMetadata(Raw.GUILD_AVAILABLE, e.id()));
         catnip.on(DiscordEvent.GUILD_UNAVAILABLE, e -> updateGuildMetadata(Raw.GUILD_UNAVAILABLE, e.id()));
-    
+        
         //noinspection CodeBlock2Expr
-        catnip.vertx().setPeriodic(catnip.shardManager().shardCount() * 10000L, __ -> {
+        catnip.vertx().setPeriodic(catnip.getGatewayInfo().shards() * 10000L, __ -> {
             for(int id = 0; id < catnip.shardManager().shardCount(); id++) {
                 final int finalId = id;
                 catnip.shardManager().isConnected(id).thenAccept(b -> {
