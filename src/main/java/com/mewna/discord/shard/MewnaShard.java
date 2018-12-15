@@ -85,15 +85,11 @@ public final class MewnaShard {
                         logger.warn("Got invalid:");
                         logger.warn(invalid.reason());
                     });
-                    vertx.executeBlocking(future -> {
-                        logger.info("Starting catnip!");
-                        catnip = Catnip.catnip(System.getenv("TOKEN"));
-                        registerHandlers(catnip);
-                        catnip.startShards();
-                        future.complete(null);
-                        logger.info("Finished!");
-                    }, res -> {
-                    });
+                    logger.info("Starting catnip!");
+                    catnip = Catnip.catnip(System.getenv("TOKEN"));
+                    registerHandlers(catnip);
+                    catnip.startShards();
+                    logger.info("Finished with catnip!");
                 })
                 .exceptionally(e -> {
                     logger.error("Couldn't connect to singyeong", e);
