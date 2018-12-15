@@ -87,10 +87,7 @@ public final class MewnaShard {
                     });
                     vertx.executeBlocking(future -> {
                         logger.info("Starting catnip!");
-                        catnip = Catnip.catnip(new CatnipOptions(System.getenv("TOKEN"))
-                                        .cacheWorker(new ClearableCache())
-                                        .cacheFlags(EnumSet.of(CacheFlag.DROP_EMOJI, CacheFlag.DROP_GAME_STATUSES)),
-                                vertx);
+                        catnip = Catnip.catnip(System.getenv("TOKEN"), vertx);
                         registerHandlers(catnip);
                         catnip.startShards();
                         future.complete(null);
