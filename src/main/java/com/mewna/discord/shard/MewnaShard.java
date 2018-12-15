@@ -191,7 +191,7 @@ public final class MewnaShard {
                                         lighthouse.service().unlock();
                                         catnip.startShards();
                                     } else {
-                                        logger.error("Too many shards!!!");
+                                        logger.error("Too many shards! {} found", ids);
                                         lighthouse.service().unlock();
                                         scheduleSharding();
                                     }
