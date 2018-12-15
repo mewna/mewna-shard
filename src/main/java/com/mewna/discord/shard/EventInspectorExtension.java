@@ -24,9 +24,8 @@ class EventInspectorExtension extends AbstractExtension {
             @Override
             public JsonObject rawGatewayReceiveHook(@Nonnull final JsonObject json) {
                 final String type = json.getString("t");
-                if(mewnaShard.lastShardId() > -1) {
-                    mewnaShard.statsClient().gauge("gatewayEvents", 0, "shard:" + mewnaShard.lastShardId(), "type:" + type);
-                }
+                mewnaShard.statsClient().gauge("gatewayEvents", 0, "type:" + type);
+                
                 return json;
             }
         });

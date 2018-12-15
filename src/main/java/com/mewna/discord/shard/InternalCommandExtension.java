@@ -34,35 +34,14 @@ public class InternalCommandExtension extends AbstractExtension {
     public void start() {
         //noinspection CodeBlock2Expr
         commands.put("stats", msg -> {
-            shard.pubsub("stats", new JsonObject())
-                    .thenAccept(objs -> {
-                        int guilds = 0;
-                        int users = 0;
-                        int members = 0;
-                        int channels = 0;
-                        int roles = 0;
-                        for(final JsonObject obj : objs) {
-                            guilds += obj.getInteger("guilds");
-                            users += obj.getInteger("users");
-                            members += obj.getInteger("members");
-                            channels += obj.getInteger("channels");
-                            roles += obj.getInteger("roles");
-                        }
-                        msg.channel().sendMessage("Stats:\n" +
-                                "```CSS\n" +
-                                "  [guilds] " + guilds + '\n' +
-                                "   [users] " + users + '\n' +
-                                " [members] " + members + '\n' +
-                                "[channels] " + channels + '\n' +
-                                "   [roles] " + roles + '\n' +
-                                "```");
-                    })
-                    .exceptionally(e -> {
-                        msg.channel().sendMessage("Failed with error (Check sentry)");
-                        Sentry.capture(e);
-                        e.printStackTrace();
-                        return null;
-                    });
+            msg.channel().sendMessage("Stats:\n" +
+                    "```CSS\n" +
+                    "  [guilds] " + catnip().cache().guilds().size() + '\n' +
+                    "   [users] " + catnip().cache().users().size() + '\n' +
+                    " [members] " + catnip().cache().members().size() + '\n' +
+                    "[channels] " + catnip().cache().channels().size() + '\n' +
+                    "   [roles] " + catnip().cache().roles().size() + '\n' +
+                    "```");
         });
         //noinspection CodeBlock2Expr
         commands.put("here", msg -> {
@@ -76,6 +55,7 @@ public class InternalCommandExtension extends AbstractExtension {
                     "```");
         });
         //noinspection CodeBlock2Expr
+        /*
         commands.put("ram", msg -> {
             shard.pubsub("ram", new JsonObject()).thenAccept(objs -> {
                 try {
@@ -139,6 +119,25 @@ public class InternalCommandExtension extends AbstractExtension {
                 return null;
             });
         });
+        
+                        case "ram": {
+                    final MemoryUsage heap = ManagementFactory.getMemoryMXBean().getHeapMemoryUsage();
+                    final MemoryUsage nonHeap = ManagementFactory.getMemoryMXBean().getNonHeapMemoryUsage();
+                    return new JsonObject()
+                            .put("heap", new JsonObject()
+                                    .put("used", heap.getUsed())
+                                    .put("allocated", heap.getCommitted())
+                                    .put("total", heap.getMax())
+                                    .put("init", heap.getInit())
+                            )
+                            .put("nonheap", new JsonObject()
+                                    .put("used", nonHeap.getUsed())
+                                    .put("allocated", nonHeap.getCommitted())
+                                    .put("total", nonHeap.getMax())
+                                    .put("init", nonHeap.getInit())
+                            );
+                }
+        */
         
         catnip().on(DiscordEvent.MESSAGE_CREATE, msg -> {
             if(msg.type() == MessageType.DEFAULT) {
