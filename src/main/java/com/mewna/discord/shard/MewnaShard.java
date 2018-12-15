@@ -297,22 +297,24 @@ public final class MewnaShard {
         catnip.on(DiscordEvent.GUILD_UNAVAILABLE, e -> updateGuildMetadata(Raw.GUILD_UNAVAILABLE, e.id()));
         
         //noinspection CodeBlock2Expr
-        catnip.vertx().setPeriodic(catnip.getGatewayInfo().shards() * 10000L, __ -> {
-            for(int id = 0; id < catnip.shardManager().shardCount(); id++) {
-                final int finalId = id;
-                catnip.shardManager().isConnected(id).thenAccept(b -> {
-                    if(finalId > -1 && b) {
-                        statsClient.gauge("members", catnip.cache().members().size(), "shard:" + finalId);
-                        statsClient.gauge("users", catnip.cache().users().size(), "shard:" + finalId);
-                        statsClient.gauge("guilds", catnip.cache().guilds().size(), "shard:" + finalId);
-                        statsClient.gauge("roles", catnip.cache().roles().size(), "shard:" + finalId);
-                        statsClient.gauge("presences", catnip.cache().presences().size(), "shard:" + finalId);
-                        statsClient.gauge("channels", catnip.cache().channels().size(), "shard:" + finalId);
-                        statsClient.gauge("emojis", catnip.cache().emojis().size(), "shard:" + finalId);
-                        statsClient.gauge("voiceStates", catnip.cache().voiceStates().size(), "shard:" + finalId);
-                    }
-                });
-            }
+        catnip.vertx().setTimer(catnip.getGatewayInfo().shards() * 10000L, __ -> {
+            catnip.vertx().setPeriodic(10000L, ___ -> {
+                for(int id = 0; id < catnip.shardManager().shardCount(); id++) {
+                    final int finalId = id;
+                    catnip.shardManager().isConnected(id).thenAccept(b -> {
+                        if(finalId > -1 && b) {
+                            statsClient.gauge("members", catnip.cache().members().size(), "shard:" + finalId);
+                            statsClient.gauge("users", catnip.cache().users().size(), "shard:" + finalId);
+                            statsClient.gauge("guilds", catnip.cache().guilds().size(), "shard:" + finalId);
+                            statsClient.gauge("roles", catnip.cache().roles().size(), "shard:" + finalId);
+                            statsClient.gauge("presences", catnip.cache().presences().size(), "shard:" + finalId);
+                            statsClient.gauge("channels", catnip.cache().channels().size(), "shard:" + finalId);
+                            statsClient.gauge("emojis", catnip.cache().emojis().size(), "shard:" + finalId);
+                            statsClient.gauge("voiceStates", catnip.cache().voiceStates().size(), "shard:" + finalId);
+                        }
+                    });
+                }
+            });
         });
     }
     
