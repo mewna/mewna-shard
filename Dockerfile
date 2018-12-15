@@ -7,4 +7,4 @@ RUN mvn -B -q clean package
 FROM openjdk:11-jre-slim
 COPY --from=0 /app/target/mewna*.jar /app/mewna.jar
 
-ENTRYPOINT ["/usr/bin/java", "-Xms4G", "-Xmx4G", "-jar", "/app/mewna.jar"]
+ENTRYPOINT ["/usr/bin/java", "-Xms8G", "-Xmx8G", "-jar", "/app/mewna.jar"]
