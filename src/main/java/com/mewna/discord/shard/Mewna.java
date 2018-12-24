@@ -19,7 +19,6 @@ import java.util.EnumSet;
  * @since 12/23/18
  */
 public final class Mewna {
-    private final Vertx vertx = Vertx.vertx();
     private final Logger logger = LoggerFactory.getLogger(getClass());
     
     public static void main(final String[] args) {
@@ -27,6 +26,10 @@ public final class Mewna {
     }
     
     private void start() {
+        if(System.getenv("SENTRY_DSN") != null) {
+            Sentry.init(System.getenv("SENTRY_DSN"));
+        }
+        
         final EntityCacheWorker sharedCache = new MemoryEntityCache();
         final int count = Integer.parseInt(System.getenv("SHARD_COUNT"));
         logger.info("Will be starting {} shards!", count);
@@ -48,6 +51,7 @@ public final class Mewna {
                         .cacheWorker(cache)
                         .cacheFlags(EnumSet.of(CacheFlag.DROP_EMOJI, CacheFlag.DROP_GAME_STATUSES))
                         .shardManager(new DefaultShardManager(count, Collections.singletonList(id))),
-                vertx);
+                // We use a new vert.x each time because otherwise :fire:
+                Vertx.vertx());
     }
 }

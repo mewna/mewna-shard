@@ -65,9 +65,6 @@ public final class MewnaShard {
     
     void start() {
         logger.info("Starting Mewna shard...");
-        if(System.getenv("SENTRY_DSN") != null) {
-            Sentry.init(System.getenv("SENTRY_DSN"));
-        }
         client = SingyeongClient.create(vertx, System.getenv("SINGYEONG_DSN"));
         client.connect()
                 .thenAccept(__ -> {
