@@ -96,6 +96,8 @@ public final class MewnaShard {
         if(d.containsKey("type")) {
             switch(d.getString("type").toUpperCase()) {
                 case "VOICE_JOIN": {
+                    logger.info("Joining voice in guild {} on shard {}", d.getString("guild_id"),
+                            guild2shard(d.getString("guild_id")));
                     mewna.catnips().get(guild2shard(d.getString("guild_id")))
                             .openVoiceConnection(d.getString("guild_id"), d.getString("channel_id"));
                     /*
