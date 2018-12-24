@@ -229,6 +229,7 @@ public final class MewnaShard {
             logger.info("Trace: {}", ready.trace());
             logger.info("Received {} unavailable guilds.", ready.guilds().size());
             readyGuilds.addAll(ready.guilds().stream().map(Snowflake::id).collect(Collectors.toList()));
+            updateGuildMetadata(ready.guilds().stream().map(Snowflake::id).collect(Collectors.toList()));
         });
         // Push events to backend
         catnip.on(DiscordEvent.MESSAGE_CREATE, msg -> {
