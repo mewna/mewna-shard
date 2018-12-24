@@ -138,7 +138,7 @@
                     <!-- See http://stackoverflow.com/a/6773868 -->
                     <archive>
                         <manifest>
-                            <mainClass>com.mewna.discord.shard.MewnaShard</mainClass>
+                            <mainClass>com.mewna.discord.shard.Mewna</mainClass>
                             <addClasspath>true</addClasspath>
                             <addDefaultImplementationEntries>true</addDefaultImplementationEntries>
                         </manifest>
