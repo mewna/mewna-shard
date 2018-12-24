@@ -303,14 +303,14 @@ public final class MewnaShard {
                     final int finalId = id;
                     catnip.shardManager().isConnected(id).thenAccept(b -> {
                         if(finalId > -1 && b) {
-                            statsClient.gauge("members", catnip.cache().members().size(), "shard:" + finalId);
-                            statsClient.gauge("users", catnip.cache().users().size(), "shard:" + finalId);
-                            statsClient.gauge("guilds", catnip.cache().guilds().size(), "shard:" + finalId);
-                            statsClient.gauge("roles", catnip.cache().roles().size(), "shard:" + finalId);
-                            statsClient.gauge("presences", catnip.cache().presences().size(), "shard:" + finalId);
-                            statsClient.gauge("channels", catnip.cache().channels().size(), "shard:" + finalId);
-                            statsClient.gauge("emojis", catnip.cache().emojis().size(), "shard:" + finalId);
-                            statsClient.gauge("voiceStates", catnip.cache().voiceStates().size(), "shard:" + finalId);
+                            statsClient.gauge("members", catnip.cache().members().size()); // , "shard:" + finalId);
+                            statsClient.gauge("users", catnip.cache().users().size()); // , "shard:" + finalId);
+                            statsClient.gauge("guilds", catnip.cache().guilds().size()); // , "shard:" + finalId);
+                            statsClient.gauge("roles", catnip.cache().roles().size()); // , "shard:" + finalId);
+                            statsClient.gauge("presences", catnip.cache().presences().size()); // , "shard:" + finalId);
+                            statsClient.gauge("channels", catnip.cache().channels().size()); // , "shard:" + finalId);
+                            statsClient.gauge("emojis", catnip.cache().emojis().size()); // , "shard:" + finalId);
+                            statsClient.gauge("voiceStates", catnip.cache().voiceStates().size()); // , "shard:" + finalId);
                         }
                     });
                 }
