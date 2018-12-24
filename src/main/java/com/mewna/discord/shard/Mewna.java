@@ -8,6 +8,8 @@ import com.mewna.catnip.cache.MemoryEntityCache;
 import com.mewna.catnip.shard.manager.DefaultShardManager;
 import io.sentry.Sentry;
 import io.vertx.core.Vertx;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.Collections;
 import java.util.EnumSet;
@@ -18,6 +20,7 @@ import java.util.EnumSet;
  */
 public final class Mewna {
     private final Vertx vertx = Vertx.vertx();
+    private final Logger logger = LoggerFactory.getLogger(getClass());
     
     public static void main(final String[] args) {
         new Mewna().start();
@@ -26,14 +29,17 @@ public final class Mewna {
     private void start() {
         final EntityCacheWorker sharedCache = new MemoryEntityCache();
         final int count = Integer.parseInt(System.getenv("SHARD_COUNT"));
+        logger.info("Will be starting {} shards!", count);
         
         for(int i = 0; i < count; i++) {
             new MewnaShard(provideCatnip(i, count, sharedCache)).start();
+            logger.info("Started shard {} / {}", i, count);
             try {
                 Thread.sleep(6500L);
             } catch(final InterruptedException e) {
                 Sentry.capture(e);
             }
+            logger.info("Preparing to start shard {} / {}", i + 1, count);
         }
     }
     
