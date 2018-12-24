@@ -23,8 +23,8 @@
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 
-        <!-- catnip.version>c149dad</catnip.version -->
-        <catnip.version>0.9.1</catnip.version>
+        <catnip.version>f14d65d</catnip.version>
+        <!-- catnip.version>0.9.1</catnip.version -->
         <lighthouse.version>475b12d</lighthouse.version>
         <singyeong.version>03eaacc</singyeong.version>
         <logback.version>1.2.3</logback.version>
