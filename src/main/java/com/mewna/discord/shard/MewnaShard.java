@@ -4,6 +4,7 @@ import com.mewna.catnip.Catnip;
 import com.mewna.catnip.entity.Entity;
 import com.mewna.catnip.entity.Snowflake;
 import com.mewna.catnip.entity.channel.Channel;
+import com.mewna.catnip.entity.channel.GuildChannel;
 import com.mewna.catnip.entity.guild.Guild;
 import com.mewna.catnip.entity.guild.Member;
 import com.mewna.catnip.entity.guild.Role;
@@ -31,6 +32,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.annotation.Nonnull;
+import java.util.Collection;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
@@ -46,11 +49,13 @@ public final class MewnaShard {
     @Getter
     private final StatsDClient statsClient;
     private final Vertx vertx = Vertx.vertx();
+    private final Catnip catnip;
+    private final Collection<String> readyGuilds = new HashSet<>();
     private SingyeongClient client;
-    private Catnip catnip;
     private boolean handlersRegistered;
     
-    private MewnaShard() {
+    MewnaShard(final Catnip catnip) {
+        this.catnip = catnip;
         if(System.getenv("STATSD_ENABLED") != null) {
             statsClient = new NonBlockingStatsDClient("v2.shards", System.getenv("STATSD_HOST"), 8125);
         } else {
@@ -58,17 +63,11 @@ public final class MewnaShard {
         }
     }
     
-    public static void main(final String[] args) {
-        new MewnaShard().start();
-    }
-    
-    private void start() {
+    void start() {
         logger.info("Starting Mewna shard...");
         if(System.getenv("SENTRY_DSN") != null) {
             Sentry.init(System.getenv("SENTRY_DSN"));
         }
-        final String redisHost = System.getenv("REDIS_HOST");
-        final String redisAuth = System.getenv("REDIS_AUTH");
         client = SingyeongClient.create(vertx, System.getenv("SINGYEONG_DSN"));
         client.connect()
                 .thenAccept(__ -> {
@@ -78,9 +77,8 @@ public final class MewnaShard {
                         logger.warn(invalid.reason());
                     });
                     logger.info("Starting catnip!");
-                    catnip = Catnip.catnip(System.getenv("TOKEN"));
                     registerHandlers(catnip);
-                    catnip.startShards();
+                    catnip.connect();
                     logger.info("Finished with catnip!");
                 })
                 .exceptionally(e -> {
@@ -189,7 +187,7 @@ public final class MewnaShard {
                             }
                             // Multiple lookups
                             case "channels": {
-                                final List<Channel> channels = catnip.cache().channels(id);
+                                final Collection<GuildChannel> channels = catnip.cache().channels(id).snapshot();
                                 res = new JsonObject()
                                         .put("_type", "channels")
                                         .put("_data", channels.stream().map(Entity::toJson).collect(Collectors.toList()))
@@ -197,7 +195,7 @@ public final class MewnaShard {
                                 break;
                             }
                             case "roles": {
-                                final List<Role> roles = catnip.cache().roles(id);
+                                final Collection<Role> roles = catnip.cache().roles(id).snapshot();
                                 res = new JsonObject()
                                         .put("_type", "roles")
                                         .put("_data", roles.stream().map(Entity::toJson).collect(Collectors.toList()))
@@ -233,6 +231,7 @@ public final class MewnaShard {
             logger.info("Logged in as {}#{}", ready.user().username(), ready.user().discriminator());
             logger.info("Trace: {}", ready.trace());
             logger.info("Received {} unavailable guilds.", ready.guilds().size());
+            readyGuilds.addAll(ready.guilds().stream().map(Snowflake::id).collect(Collectors.toList()));
         });
         // Push events to backend
         catnip.on(DiscordEvent.MESSAGE_CREATE, msg -> {
@@ -291,10 +290,14 @@ public final class MewnaShard {
                     client.send("nekomimi", new QueryBuilder().build(), json);
                 }));
         // Update metadata
-        catnip.on(DiscordEvent.GUILD_CREATE, e -> updateGuildMetadata(Raw.GUILD_CREATE, e.id()));
-        catnip.on(DiscordEvent.GUILD_DELETE, e -> updateGuildMetadata(Raw.GUILD_DELETE, e.id()));
-        catnip.on(DiscordEvent.GUILD_AVAILABLE, e -> updateGuildMetadata(Raw.GUILD_AVAILABLE, e.id()));
-        catnip.on(DiscordEvent.GUILD_UNAVAILABLE, e -> updateGuildMetadata(Raw.GUILD_UNAVAILABLE, e.id()));
+        catnip.on(DiscordEvent.GUILD_CREATE, e -> updateGuildMetadata(Raw.GUILD_CREATE));
+        catnip.on(DiscordEvent.GUILD_DELETE, e -> updateGuildMetadata(Raw.GUILD_DELETE));
+        catnip.on(DiscordEvent.GUILD_AVAILABLE, e -> {
+            if(!readyGuilds.contains(e.id())) {
+                updateGuildMetadata(Raw.GUILD_AVAILABLE);
+            }
+        });
+        catnip.on(DiscordEvent.GUILD_UNAVAILABLE, e -> updateGuildMetadata(Raw.GUILD_UNAVAILABLE));
         
         //noinspection CodeBlock2Expr
         catnip.vertx().setTimer(catnip.getGatewayInfo().shards() * 10000L, __ -> {
@@ -318,7 +321,7 @@ public final class MewnaShard {
         });
     }
     
-    private void updateGuildMetadata(final String event, final String id) {
+    private void updateGuildMetadata(final String event) {
         updateGuildMetadata(catnip.cache().guilds().stream().map(Snowflake::id).collect(Collectors.toList()));
     }
     

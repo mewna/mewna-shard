@@ -4,9 +4,9 @@ import com.mewna.catnip.entity.message.Message;
 import com.mewna.catnip.entity.message.MessageType;
 import com.mewna.catnip.extension.AbstractExtension;
 import com.mewna.catnip.shard.DiscordEvent;
-import io.sentry.Sentry;
-import io.vertx.core.json.JsonObject;
 
+import java.lang.management.ManagementFactory;
+import java.lang.management.MemoryUsage;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Consumer;
@@ -54,91 +54,33 @@ public class InternalCommandExtension extends AbstractExtension {
                     "   [roles] " + msg.guild().roles().size() + '\n' +
                     "```");
         });
-        //noinspection CodeBlock2Expr
-        /*
         commands.put("ram", msg -> {
-            shard.pubsub("ram", new JsonObject()).thenAccept(objs -> {
-                try {
-                    long heapUsed = 0;
-                    long heapAllocated = 0;
-                    long heapTotal = 0;
-                    long heapInit = 0;
-                    long nonHeapUsed = 0;
-                    long nonHeapAllocated = 0;
-                    long nonHeapTotal = 0;
-                    long nonHeapInit = 0;
-                    
-                    for(final JsonObject o : objs) {
-                        try {
-                            final JsonObject heap = o.getJsonObject("heap");
-                            final JsonObject nonHeap = o.getJsonObject("nonheap");
-                            
-                            heapUsed += heap.getLong("used");
-                            heapAllocated += heap.getLong("allocated");
-                            heapTotal += heap.getLong("total");
-                            heapInit += heap.getLong("init");
-                            
-                            nonHeapUsed += nonHeap.getLong("used");
-                            nonHeapAllocated += nonHeap.getLong("allocated");
-                            nonHeapTotal += nonHeap.getLong("total");
-                            nonHeapInit += nonHeap.getLong("init");
-                        } catch(final Exception e) {
-                            Sentry.capture(e);
-                        }
-                    }
-                    
-                    heapUsed /= 1024L * 1024L;
-                    heapAllocated /= 1024L * 1024L;
-                    heapTotal /= 1024L * 1024L;
-                    heapInit /= 1024L * 1024L;
-                    nonHeapUsed /= 1024L * 1024L;
-                    nonHeapAllocated /= 1024L * 1024L;
-                    nonHeapTotal /= 1024L * 1024L;
-                    nonHeapInit /= 1024L * 1024L;
-                    
-                    msg.channel().sendMessage("RAM:\n" +
-                            "```CSS\n" +
-                            "[HEAP]\n" +
-                            "     [Init] " + heapInit + "MB\n" +
-                            "     [Used] " + heapUsed + "MB\n" +
-                            "    [Alloc] " + heapAllocated + "MB\n" +
-                            "    [Total] " + heapTotal + "MB\n" +
-                            "[NONHEAP]\n" +
-                            "     [Init] " + nonHeapInit + "MB\n" +
-                            "     [Used] " + nonHeapUsed + "MB\n" +
-                            "    [Alloc] " + nonHeapAllocated + "MB\n" +
-                            "    [Total] " + nonHeapTotal + "MB\n" +
-                            "```");
-                } catch(final Exception e) {
-                    Sentry.capture(e);
-                }
-            }).exceptionally(e -> {
-                msg.channel().sendMessage("Failed with error (Check sentry)");
-                Sentry.capture(e);
-                e.printStackTrace();
-                return null;
-            });
+            final MemoryUsage heap = ManagementFactory.getMemoryMXBean().getHeapMemoryUsage();
+            final MemoryUsage nonHeap = ManagementFactory.getMemoryMXBean().getNonHeapMemoryUsage();
+            final long heapUsed = heap.getUsed() / (1024L * 1024L);
+            final long heapAllocated = heap.getCommitted() / (1024L * 1024L);
+            final long heapTotal = heap.getMax() / (1024L * 1024L);
+            final long heapInit = heap.getInit() / (1024L * 1024L);
+            final long nonHeapUsed = nonHeap.getUsed() / (1024L * 1024L);
+            final long nonHeapAllocated = nonHeap.getCommitted() / (1024L * 1024L);
+            final long nonHeapTotal = nonHeap.getMax() / (1024L * 1024L);
+            final long nonHeapInit = nonHeap.getInit() / (1024L * 1024L);
+            
+            msg.channel().sendMessage("RAM:\n" +
+                    "```CSS\n" +
+                    "[HEAP]\n" +
+                    "     [Init] " + heapInit + "MB\n" +
+                    "     [Used] " + heapUsed + "MB\n" +
+                    "    [Alloc] " + heapAllocated + "MB\n" +
+                    "    [Total] " + heapTotal + "MB\n" +
+                    "[NONHEAP]\n" +
+                    "     [Init] " + nonHeapInit + "MB\n" +
+                    "     [Used] " + nonHeapUsed + "MB\n" +
+                    "    [Alloc] " + nonHeapAllocated + "MB\n" +
+                    "    [Total] " + nonHeapTotal + "MB\n" +
+                    "```");
         });
-        
-                        case "ram": {
-                    final MemoryUsage heap = ManagementFactory.getMemoryMXBean().getHeapMemoryUsage();
-                    final MemoryUsage nonHeap = ManagementFactory.getMemoryMXBean().getNonHeapMemoryUsage();
-                    return new JsonObject()
-                            .put("heap", new JsonObject()
-                                    .put("used", heap.getUsed())
-                                    .put("allocated", heap.getCommitted())
-                                    .put("total", heap.getMax())
-                                    .put("init", heap.getInit())
-                            )
-                            .put("nonheap", new JsonObject()
-                                    .put("used", nonHeap.getUsed())
-                                    .put("allocated", nonHeap.getCommitted())
-                                    .put("total", nonHeap.getMax())
-                                    .put("init", nonHeap.getInit())
-                            );
-                }
-        */
-        
+
         catnip().on(DiscordEvent.MESSAGE_CREATE, msg -> {
             if(msg.type() == MessageType.DEFAULT) {
                 if(msg.guildId() != null && msg.member() != null) {
