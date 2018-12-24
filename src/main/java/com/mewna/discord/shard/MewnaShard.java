@@ -285,6 +285,7 @@ public final class MewnaShard {
                             .put("session_id", state.sessionId())
                             .put("endpoint", vsu.endpoint())
                             .put("token", vsu.token());
+                    logger.info("Sending join info to nekomimi for guild {}", vsu.guildId());
                     client.send("nekomimi", new QueryBuilder().build(), json);
                 }));
         // Update metadata
