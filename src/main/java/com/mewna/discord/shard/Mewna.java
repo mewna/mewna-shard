@@ -8,18 +8,25 @@ import com.mewna.catnip.cache.MemoryEntityCache;
 import com.mewna.catnip.shard.manager.DefaultShardManager;
 import io.sentry.Sentry;
 import io.vertx.core.Vertx;
+import lombok.Getter;
+import lombok.experimental.Accessors;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.Collections;
 import java.util.EnumSet;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * @author infinity
  * @since 12/23/18
  */
+@Accessors(fluent = true)
 public final class Mewna {
     private final Logger logger = LoggerFactory.getLogger(getClass());
+    @Getter
+    private final Map<Integer, Catnip> catnips = new ConcurrentHashMap<>();
     
     public static void main(final String[] args) {
         new Mewna().start();
@@ -35,7 +42,9 @@ public final class Mewna {
         logger.info("Will be starting {} shards!", count);
         
         for(int i = 0; i < count; i++) {
-            new MewnaShard(provideCatnip(i, count, sharedCache)).start();
+            final Catnip catnip = provideCatnip(i, count, sharedCache);
+            catnips.put(i, catnip);
+            new MewnaShard(this, catnip).start();
             logger.info("Started shard {} / {}", i, count);
             try {
                 Thread.sleep(6500L);
@@ -51,7 +60,6 @@ public final class Mewna {
                         .cacheWorker(cache)
                         .cacheFlags(EnumSet.of(CacheFlag.DROP_EMOJI, CacheFlag.DROP_GAME_STATUSES))
                         .shardManager(new DefaultShardManager(count, Collections.singletonList(id))),
-                // We use a new vert.x each time because otherwise :fire:
                 Vertx.vertx());
     }
 }

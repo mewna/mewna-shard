@@ -22,7 +22,6 @@ import gg.amy.singyeong.Dispatch;
 import gg.amy.singyeong.QueryBuilder;
 import gg.amy.singyeong.SingyeongClient;
 import gg.amy.singyeong.SingyeongType;
-import io.sentry.Sentry;
 import io.vertx.core.Vertx;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
@@ -46,6 +45,7 @@ import java.util.stream.Collectors;
 @SuppressWarnings("unused")
 public final class MewnaShard {
     private final Logger logger = LoggerFactory.getLogger(getClass());
+    private final Mewna mewna;
     @Getter
     private final StatsDClient statsClient;
     private final Vertx vertx = Vertx.vertx();
@@ -54,7 +54,8 @@ public final class MewnaShard {
     private SingyeongClient client;
     private boolean handlersRegistered;
     
-    MewnaShard(final Catnip catnip) {
+    MewnaShard(final Mewna mewna, final Catnip catnip) {
+        this.mewna = mewna;
         this.catnip = catnip;
         if(System.getenv("STATSD_ENABLED") != null) {
             statsClient = new NonBlockingStatsDClient("v2.shards", System.getenv("STATSD_HOST"), 8125);
@@ -95,12 +96,16 @@ public final class MewnaShard {
         if(d.containsKey("type")) {
             switch(d.getString("type").toUpperCase()) {
                 case "VOICE_JOIN": {
+                    mewna.catnips().get(guild2shard(d.getString("guild_id")))
+                            .openVoiceConnection(d.getString("guild_id"), d.getString("channel_id"));
+                    /*
                     vertx.eventBus().send(CatnipShard.websocketMessageQueueAddress(guild2shard(d.getString("guild_id"))),
                             CatnipShard.basePayload(GatewayOp.VOICE_STATE_UPDATE, new JsonObject()
                                     .put("guild_id", d.getString("guild_id"))
                                     .put("channel_id", d.getString("channel_id"))
                                     .put("self_deaf", true)
                                     .put("self_mute", false)));
+                                    */
                     break;
                 }
                 case "VOICE_LEAVE": {
@@ -110,12 +115,17 @@ public final class MewnaShard {
                             .put("guild_id", d.getString("guild_id"));
                     //logger.info("Sending to nekomimi node:\n{}", json.encodePrettily());
                     client.send("nekomimi", new QueryBuilder().build(), json);
+    
+                    mewna.catnips().get(guild2shard(d.getString("guild_id")))
+                            .closeVoiceConnection(d.getString("guild_id"));
+                    /*
                     vertx.eventBus().send(CatnipShard.websocketMessageQueueAddress(guild2shard(d.getString("guild_id"))),
                             CatnipShard.basePayload(GatewayOp.VOICE_STATE_UPDATE, new JsonObject()
                                     .put("guild_id", d.getString("guild_id"))
                                     .putNull("channel_id")
                                     .put("self_deaf", true)
                                     .put("self_mute", false)));
+                                    */
                     break;
                 }
                 case "CACHE": {
