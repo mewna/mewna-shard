@@ -11,10 +11,8 @@ import com.mewna.catnip.entity.guild.Role;
 import com.mewna.catnip.entity.message.MessageType;
 import com.mewna.catnip.entity.user.User;
 import com.mewna.catnip.entity.user.VoiceState;
-import com.mewna.catnip.shard.CatnipShard;
 import com.mewna.catnip.shard.DiscordEvent;
 import com.mewna.catnip.shard.DiscordEvent.Raw;
-import com.mewna.catnip.shard.GatewayOp;
 import com.timgroup.statsd.NoOpStatsDClient;
 import com.timgroup.statsd.NonBlockingStatsDClient;
 import com.timgroup.statsd.StatsDClient;
@@ -96,8 +94,6 @@ public final class MewnaShard {
         if(d.containsKey("type")) {
             switch(d.getString("type").toUpperCase()) {
                 case "VOICE_JOIN": {
-                    logger.info("Joining voice in guild {} on shard {}", d.getString("guild_id"),
-                            guild2shard(d.getString("guild_id")));
                     mewna.catnips().get(guild2shard(d.getString("guild_id")))
                             .openVoiceConnection(d.getString("guild_id"), d.getString("channel_id"));
                     /*
@@ -117,7 +113,7 @@ public final class MewnaShard {
                             .put("guild_id", d.getString("guild_id"));
                     //logger.info("Sending to nekomimi node:\n{}", json.encodePrettily());
                     client.send("nekomimi", new QueryBuilder().build(), json);
-    
+                    
                     mewna.catnips().get(guild2shard(d.getString("guild_id")))
                             .closeVoiceConnection(d.getString("guild_id"));
                     /*
@@ -240,6 +236,7 @@ public final class MewnaShard {
             logger.info("Logged in as {}#{}", ready.user().username(), ready.user().discriminator());
             logger.info("Trace: {}", ready.trace());
             logger.info("Received {} unavailable guilds.", ready.guilds().size());
+            readyGuilds.clear();
             readyGuilds.addAll(ready.guilds().stream().map(Snowflake::id).collect(Collectors.toList()));
             updateGuildMetadata(ready.guilds().stream().map(Snowflake::id).collect(Collectors.toList()));
         });
@@ -297,7 +294,6 @@ public final class MewnaShard {
                             .put("session_id", state.sessionId())
                             .put("endpoint", vsu.endpoint())
                             .put("token", vsu.token());
-                    logger.info("Sending join info to nekomimi for guild {}", vsu.guildId());
                     client.send("nekomimi", new QueryBuilder().build(), json);
                 }));
         // Update metadata

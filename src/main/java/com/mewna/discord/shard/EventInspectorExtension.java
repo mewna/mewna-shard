@@ -27,18 +27,6 @@ class EventInspectorExtension extends AbstractExtension {
     public void start() throws Exception {
         registerHook(new CatnipHook() {
             @Override
-            public JsonObject rawGatewaySendHook(@Nonnull final JsonObject json) {
-                try {
-                    if(json.getInteger("op") == GatewayOp.VOICE_STATE_UPDATE.opcode()) {
-                        logger.info("Starting voice join for guild {} via gateway", json.getJsonObject("d").getString("guild_id"));
-                    }
-                } catch(final Exception e) {
-                    Sentry.capture(e);
-                }
-                return json;
-            }
-    
-            @Override
             public JsonObject rawGatewayReceiveHook(@Nonnull final JsonObject json) {
                 final String type = json.getString("t");
                 mewnaShard.statsClient().count("gatewayEvents", 1, "type:" + type);
