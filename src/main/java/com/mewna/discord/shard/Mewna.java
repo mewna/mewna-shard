@@ -5,6 +5,7 @@ import com.mewna.catnip.CatnipOptions;
 import com.mewna.catnip.cache.CacheFlag;
 import com.mewna.catnip.cache.EntityCacheWorker;
 import com.mewna.catnip.cache.MemoryEntityCache;
+import com.mewna.catnip.cache.UnifiedMemoryEntityCache;
 import com.mewna.catnip.shard.manager.DefaultShardManager;
 import io.sentry.Sentry;
 import io.vertx.core.Vertx;
@@ -37,7 +38,7 @@ public final class Mewna {
             Sentry.init(System.getenv("SENTRY_DSN"));
         }
         
-        final EntityCacheWorker sharedCache = new MemoryEntityCache();
+        final EntityCacheWorker sharedCache = new UnifiedMemoryEntityCache();
         final int count = Integer.parseInt(System.getenv("SHARD_COUNT"));
         logger.info("Will be starting {} shards!", count);
         
