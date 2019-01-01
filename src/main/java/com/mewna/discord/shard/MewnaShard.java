@@ -269,15 +269,17 @@ public final class MewnaShard {
             statsClient.gauge("users", catnip.cache().users().size());
         });
         catnip.on(DiscordEvent.GUILD_MEMBER_REMOVE, member -> {
-            @SuppressWarnings("ConstantConditions")
-            final var payload = new JsonObject()
-                    .put("type", Raw.GUILD_MEMBER_REMOVE)
-                    .put("guild", catnip.cache().guild(member.guildId()).toJson())
-                    .put("user", catnip.cache().user(member.id()).toJson())
-                    .put("member", member.toJson());
-            client.send("mewna-backend", new QueryBuilder().build(), payload);
-            statsClient.gauge("members", catnip.cache().members().size());
-            statsClient.gauge("users", catnip.cache().users().size());
+            if(catnip.cache().guild(member.guildId()) != null) {
+                @SuppressWarnings("ConstantConditions")
+                final var payload = new JsonObject()
+                        .put("type", Raw.GUILD_MEMBER_REMOVE)
+                        .put("guild", catnip.cache().guild(member.guildId()).toJson())
+                        .put("user", catnip.cache().user(member.id()).toJson())
+                        .put("member", member.toJson());
+                client.send("mewna-backend", new QueryBuilder().build(), payload);
+                statsClient.gauge("members", catnip.cache().members().size());
+                statsClient.gauge("users", catnip.cache().users().size());
+            }
         });
         // Voice
         catnip.on(DiscordEvent.VOICE_SERVER_UPDATE, vsu ->
