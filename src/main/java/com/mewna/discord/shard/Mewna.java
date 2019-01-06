@@ -6,18 +6,26 @@ import com.mewna.catnip.cache.CacheFlag;
 import com.mewna.catnip.cache.EntityCacheWorker;
 import com.mewna.catnip.cache.MemoryEntityCache;
 import com.mewna.catnip.cache.UnifiedMemoryEntityCache;
+import com.mewna.catnip.shard.CatnipShard;
+import com.mewna.catnip.shard.CatnipShard.ShardConnectState;
 import com.mewna.catnip.shard.manager.DefaultShardManager;
+import com.mewna.catnip.shard.manager.ShardCondition;
+import com.mewna.catnip.util.SafeVertxCompletableFuture;
 import io.sentry.Sentry;
+import io.vertx.core.Future;
 import io.vertx.core.Vertx;
 import lombok.Getter;
 import lombok.experimental.Accessors;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.annotation.Nonnull;
 import java.util.Collections;
 import java.util.EnumSet;
 import java.util.Map;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.Semaphore;
 
 /**
  * @author infinity
@@ -28,6 +36,8 @@ public final class Mewna {
     private final Logger logger = LoggerFactory.getLogger(getClass());
     @Getter
     private final Map<Integer, Catnip> catnips = new ConcurrentHashMap<>();
+    
+    private final Semaphore lock = new Semaphore(1);
     
     public static void main(final String[] args) {
         new Mewna().start();
@@ -57,10 +67,32 @@ public final class Mewna {
     }
     
     private Catnip provideCatnip(final int id, final int count, final EntityCacheWorker cache) {
-        return Catnip.catnip(new CatnipOptions(System.getenv("TOKEN"))
+        final var catnip = Catnip.catnip(new CatnipOptions(System.getenv("TOKEN"))
                         .cacheWorker(cache)
                         .cacheFlags(EnumSet.of(CacheFlag.DROP_EMOJI, CacheFlag.DROP_GAME_STATUSES))
                         .shardManager(new DefaultShardManager(count, Collections.singletonList(id))),
                 Vertx.vertx());
+        catnip.shardManager().addCondition(new ShardCondition() {
+            @Override
+            public CompletableFuture<Boolean> preshard() {
+                final Future<Boolean> future = Future.future();
+                catnip.vertx().executeBlocking(blocking -> {
+                    try {
+                        lock.acquire();
+                    } catch(final InterruptedException e) {
+                        e.printStackTrace();
+                        blocking.fail(e);
+                    }
+                    blocking.complete(null);
+                }, __ -> future.complete(true));
+                return SafeVertxCompletableFuture.from(catnip, future);
+            }
+    
+            @Override
+            public void postshard(@Nonnull final ShardConnectState shardConnectState) {
+                lock.release();
+            }
+        });
+        return catnip;
     }
 }
