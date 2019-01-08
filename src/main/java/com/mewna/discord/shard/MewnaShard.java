@@ -309,7 +309,7 @@ public final class MewnaShard {
         catnip.on(DiscordEvent.GUILD_UNAVAILABLE, e -> updateGuildMetadata(Raw.GUILD_UNAVAILABLE));
         
         //noinspection CodeBlock2Expr
-        catnip.vertx().setTimer(catnip.getGatewayInfo().shards() * 10000L, __ -> {
+        catnip.vertx().setTimer(catnip.gatewayInfo().shards() * 10000L, __ -> {
             catnip.vertx().setPeriodic(10000L, ___ -> {
                 for(int id = 0; id < catnip.shardManager().shardCount(); id++) {
                     final int finalId = id;
