@@ -5,6 +5,10 @@ import com.mewna.catnip.CatnipOptions;
 import com.mewna.catnip.cache.CacheFlag;
 import com.mewna.catnip.cache.EntityCacheWorker;
 import com.mewna.catnip.cache.UnifiedMemoryEntityCache;
+import com.mewna.catnip.entity.user.Presence;
+import com.mewna.catnip.entity.user.Presence.Activity;
+import com.mewna.catnip.entity.user.Presence.ActivityType;
+import com.mewna.catnip.entity.user.Presence.OnlineStatus;
 import com.mewna.catnip.shard.CatnipShard.ShardConnectState;
 import com.mewna.catnip.shard.manager.DefaultShardManager;
 import com.mewna.catnip.shard.manager.ShardCondition;
@@ -65,6 +69,7 @@ public final class Mewna {
     private Catnip provideCatnip(final int id, final int count, final EntityCacheWorker cache) {
         return Catnip.catnip(new CatnipOptions(System.getenv("TOKEN"))
                         .cacheWorker(cache)
+                        .presence(Presence.of(OnlineStatus.ONLINE, Activity.of("", ActivityType.PLAYING)))
                         .cacheFlags(EnumSet.of(CacheFlag.DROP_EMOJI, CacheFlag.DROP_GAME_STATUSES))
                         .shardManager(new DefaultShardManager(count, Collections.singletonList(id))),
                 Vertx.vertx());

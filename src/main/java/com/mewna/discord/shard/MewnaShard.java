@@ -245,7 +245,7 @@ public final class MewnaShard {
             // Only take default messages
             if(msg.type() == MessageType.DEFAULT) {
                 // Only take the message if it has a guild attached
-                if(msg.guildId() != null && msg.member() != null) {
+                if(msg.guildId() != null && msg.member() != null && catnip.cache().guild(msg.guildId()) != null) {
                     @SuppressWarnings("ConstantConditions")
                     final var payload = new JsonObject()
                             .put("type", Raw.MESSAGE_CREATE)
