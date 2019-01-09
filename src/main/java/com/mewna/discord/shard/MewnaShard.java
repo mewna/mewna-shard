@@ -301,6 +301,8 @@ public final class MewnaShard {
         // Update metadata
         catnip.on(DiscordEvent.GUILD_CREATE, e -> updateGuildMetadata(Raw.GUILD_CREATE));
         catnip.on(DiscordEvent.GUILD_DELETE, e -> updateGuildMetadata(Raw.GUILD_DELETE));
+        catnip.on(DiscordEvent.GUILD_CREATE, e -> statsClient.increment("guildJoins"));
+        catnip.on(DiscordEvent.GUILD_DELETE, e -> statsClient.increment("guildLeaves"));
         catnip.on(DiscordEvent.GUILD_AVAILABLE, e -> {
             if(!readyGuilds.contains(e.id())) {
                 updateGuildMetadata(Raw.GUILD_AVAILABLE);
