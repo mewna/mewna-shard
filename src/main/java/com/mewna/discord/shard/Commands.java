@@ -92,7 +92,7 @@ public class Commands {
             }
     
             final List<String> pages = Lists.partition(data, 10).stream()
-                    .map(e -> "```\n" + e + "\n```")
+                    .map(e -> "```\n" + String.join("\n", e) + "\n```")
                     .collect(Collectors.toList());
             
             //noinspection ConstantConditions
