@@ -16,6 +16,7 @@ import com.mewna.catnip.shard.DiscordEvent.Raw;
 import com.timgroup.statsd.NoOpStatsDClient;
 import com.timgroup.statsd.NonBlockingStatsDClient;
 import com.timgroup.statsd.StatsDClient;
+import gg.amy.catnip.utilities.menu.MenuExtension;
 import gg.amy.catnip.utilities.typesafeCommands.TypesafeCommandExtension;
 import gg.amy.catnip.utilities.typesafeCommands.parse.impl.UnixArgParser;
 import gg.amy.singyeong.Dispatch;
@@ -217,7 +218,9 @@ public final class MewnaShard {
         
         catnip.loadExtension(new EventInspectorExtension(this))
                 .loadExtension(new TypesafeCommandExtension("amyware!", new UnixArgParser())
-                        .addPredicate(msg -> msg.author().id().equalsIgnoreCase("128316294742147072")));
+                        .addPredicate(msg -> msg.author().id().equalsIgnoreCase("128316294742147072")))
+                .loadExtension(new MenuExtension())
+        ;
         
         catnip.on(DiscordEvent.READY, ready -> {
             logger.info("Logged in as {}#{}", ready.user().username(), ready.user().discriminator());
