@@ -24,7 +24,7 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 
         <catnip.version>0.11.0</catnip.version>
-        <catnip-utilities.version>e6f3ca3</catnip-utilities.version>
+        <catnip-utilities.version>87b35df</catnip-utilities.version>
         <catnip-rxjava2.version>3586c0ddcf</catnip-rxjava2.version>
         <lighthouse.version>475b12d</lighthouse.version>
         <singyeong.version>03eaacc</singyeong.version>
