@@ -61,15 +61,12 @@ public class Commands {
     }
     
     @Command(names = "lookup")
-    public void lookup(final Context ctx, final User user, final Role role, final Guild guild, final Guild roles,
+    public void lookup(final Context ctx, final User user, final Guild guild, final Guild roles,
                        final Channel channel, final Guild channels) {
-        if(exactlyOne(user, role, guild, roles, channel, channels)) {
+        if(exactlyOne(user, guild, roles, channel, channels)) {
             final Collection<String> pages = new ArrayList<>();
             if(user != null) {
                 pages.add(String.format("%s#%s (%s)", user.username(), user.discriminator(), user.id()));
-            }
-            if(role != null) {
-                pages.add(String.format("%s 0x%s (%s - %s)", role.name(), Integer.toHexString(role.color()), role.guildId(), role.id()));
             }
             if(guild != null) {
                 pages.add(String.format("%s (%s) in %s", guild.name(), guild.id(), guild.region()));
