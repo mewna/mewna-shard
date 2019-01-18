@@ -16,6 +16,8 @@ import com.mewna.catnip.shard.DiscordEvent.Raw;
 import com.timgroup.statsd.NoOpStatsDClient;
 import com.timgroup.statsd.NonBlockingStatsDClient;
 import com.timgroup.statsd.StatsDClient;
+import gg.amy.catnip.utilities.typesafeCommands.TypesafeCommandExtension;
+import gg.amy.catnip.utilities.typesafeCommands.parse.impl.UnixArgParser;
 import gg.amy.singyeong.Dispatch;
 import gg.amy.singyeong.QueryBuilder;
 import gg.amy.singyeong.SingyeongClient;
@@ -96,14 +98,6 @@ public final class MewnaShard {
                 case "VOICE_JOIN": {
                     mewna.catnips().get(guild2shard(d.getString("guild_id")))
                             .openVoiceConnection(d.getString("guild_id"), d.getString("channel_id"));
-                    /*
-                    vertx.eventBus().send(CatnipShard.websocketMessageQueueAddress(guild2shard(d.getString("guild_id"))),
-                            CatnipShard.basePayload(GatewayOp.VOICE_STATE_UPDATE, new JsonObject()
-                                    .put("guild_id", d.getString("guild_id"))
-                                    .put("channel_id", d.getString("channel_id"))
-                                    .put("self_deaf", true)
-                                    .put("self_mute", false)));
-                                    */
                     break;
                 }
                 case "VOICE_LEAVE": {
@@ -116,14 +110,6 @@ public final class MewnaShard {
                     
                     mewna.catnips().get(guild2shard(d.getString("guild_id")))
                             .closeVoiceConnection(d.getString("guild_id"));
-                    /*
-                    vertx.eventBus().send(CatnipShard.websocketMessageQueueAddress(guild2shard(d.getString("guild_id"))),
-                            CatnipShard.basePayload(GatewayOp.VOICE_STATE_UPDATE, new JsonObject()
-                                    .put("guild_id", d.getString("guild_id"))
-                                    .putNull("channel_id")
-                                    .put("self_deaf", true)
-                                    .put("self_mute", false)));
-                                    */
                     break;
                 }
                 case "CACHE": {
@@ -230,7 +216,8 @@ public final class MewnaShard {
         handlersRegistered = true;
         
         catnip.loadExtension(new EventInspectorExtension(this))
-                .loadExtension(new InternalCommandExtension(this));
+                .loadExtension(new TypesafeCommandExtension("amyware!", new UnixArgParser())
+                        .addPredicate(msg -> msg.author().id().equalsIgnoreCase("128316294742147072")));
         
         catnip.on(DiscordEvent.READY, ready -> {
             logger.info("Logged in as {}#{}", ready.user().username(), ready.user().discriminator());

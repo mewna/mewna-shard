@@ -24,6 +24,8 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 
         <catnip.version>0.11.0</catnip.version>
+        <catnip-utilities.version>e6f3ca3</catnip-utilities.version>
+        <catnip-rxjava2.version>3586c0ddcf</catnip-rxjava2.version>
         <lighthouse.version>475b12d</lighthouse.version>
         <singyeong.version>03eaacc</singyeong.version>
         <logback.version>1.2.3</logback.version>
@@ -38,6 +40,16 @@
             <groupId>com.github.mewna</groupId>
             <artifactId>catnip</artifactId>
             <version>${catnip.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.github.queer</groupId>
+            <artifactId>catnip-utilities</artifactId>
+            <version>${catnip-utilities.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.github.queer</groupId>
+            <artifactId>catnip-rxjava2</artifactId>
+            <version>${catnip-rxjava2.version}</version>
         </dependency>
 
         <!-- lighthouse -->
