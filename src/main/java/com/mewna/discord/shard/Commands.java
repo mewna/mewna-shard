@@ -1,6 +1,7 @@
 package com.mewna.discord.shard;
 
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Lists;
 import com.mewna.catnip.entity.channel.Channel;
 import com.mewna.catnip.entity.channel.GuildChannel;
 import com.mewna.catnip.entity.guild.Guild;
@@ -14,6 +15,9 @@ import java.lang.management.ManagementFactory;
 import java.lang.management.MemoryUsage;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.List;
+import java.util.Objects;
+import java.util.stream.Collectors;
 
 /**
  * @author amy
@@ -64,28 +68,32 @@ public class Commands {
     public void lookup(final Context ctx, final User user, final Guild guild, final Guild roles,
                        final Channel channel, final Guild channels) {
         if(exactlyOne(user, guild, roles, channel, channels)) {
-            final Collection<String> pages = new ArrayList<>();
+            final List<String> data = new ArrayList<>();
             if(user != null) {
-                pages.add(String.format("%s#%s (%s)", user.username(), user.discriminator(), user.id()));
+                data.add(String.format("%s#%s (%s)", user.username(), user.discriminator(), user.id()));
             }
             if(guild != null) {
-                pages.add(String.format("%s (%s) in %s", guild.name(), guild.id(), guild.region()));
+                data.add(String.format("%s (%s) in %s", guild.name(), guild.id(), guild.region()));
             }
             if(channel != null && channel.isGuild()) {
                 final GuildChannel gc = channel.asGuildChannel();
-                pages.add(String.format("#%s (%s - %s)", gc.name(), gc.guildId(), gc.id()));
+                data.add(String.format("#%s (%s - %s)", gc.name(), gc.guildId(), gc.id()));
             }
             if(roles != null) {
                 roles.roles().forEach(r -> {
-                    pages.add(String.format("%s 0x%s (%s - %s)", r.name(), Integer.toHexString(r.color()), r.guildId(), r.id()));
+                    data.add(String.format("%s 0x%s (%s - %s)", r.name(), Integer.toHexString(r.color()), r.guildId(), r.id()));
                 });
             }
             if(channels != null) {
                 channels.channels().forEach(c -> {
                     final GuildChannel gc = c.asGuildChannel();
-                    pages.add(String.format("#%s (%s - %s)", gc.name(), gc.guildId(), gc.id()));
+                    data.add(String.format("#%s (%s - %s)", gc.name(), gc.guildId(), gc.id()));
                 });
             }
+    
+            final List<String> pages = Lists.partition(data, 10).stream()
+                    .map(e -> "```\n" + e + "\n```")
+                    .collect(Collectors.toList());
             
             //noinspection ConstantConditions
             ctx.catnip().extensionManager().extension(MenuExtension.class)
