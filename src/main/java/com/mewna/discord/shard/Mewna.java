@@ -9,25 +9,18 @@ import com.mewna.catnip.entity.user.Presence;
 import com.mewna.catnip.entity.user.Presence.Activity;
 import com.mewna.catnip.entity.user.Presence.ActivityType;
 import com.mewna.catnip.entity.user.Presence.OnlineStatus;
-import com.mewna.catnip.shard.CatnipShard.ShardConnectState;
 import com.mewna.catnip.shard.manager.DefaultShardManager;
-import com.mewna.catnip.shard.manager.ShardCondition;
-import com.mewna.catnip.util.SafeVertxCompletableFuture;
 import io.sentry.Sentry;
-import io.vertx.core.Future;
 import io.vertx.core.Vertx;
 import lombok.Getter;
 import lombok.experimental.Accessors;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.annotation.Nonnull;
 import java.util.Collections;
 import java.util.EnumSet;
 import java.util.Map;
-import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.Semaphore;
 
 /**
  * @author infinity
@@ -62,7 +55,11 @@ public final class Mewna {
             } catch(final InterruptedException e) {
                 Sentry.capture(e);
             }
-            logger.info("Preparing to start shard {} / {}", i + 1, count);
+            if(i < count - 1) {
+                logger.info("Preparing to start shard {} / {}", i + 1, count);
+            } else {
+                logger.info("Finished booting shards! :tada:");
+            }
         }
     }
     

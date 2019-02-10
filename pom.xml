@@ -6,28 +6,21 @@
 
     <groupId>com.mewna.discord</groupId>
     <artifactId>mewna-shard</artifactId>
-    <version>0.1.0</version>
+    <version>3.0.0</version>
 
     <repositories>
         <repository>
             <id>jitpack.io</id>
             <url>https://jitpack.io</url>
         </repository>
-
-        <repository>
-            <id>bintray-mewna-catnip</id>
-            <url>https://dl.bintray.com/mewna/catnip</url>
-        </repository>
     </repositories>
 
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 
-        <catnip.version>0.11.0</catnip.version>
-        <catnip-utilities.version>87b35df</catnip-utilities.version>
-        <catnip-rxjava2.version>3586c0ddcf</catnip-rxjava2.version>
-        <lighthouse.version>475b12d</lighthouse.version>
-        <singyeong.version>03eaacc</singyeong.version>
+        <catnip.version>0.13.3</catnip.version>
+        <catnip-utilities.version>61cd9bd</catnip-utilities.version>
+        <singyeong.version>f5889b7</singyeong.version>
         <logback.version>1.2.3</logback.version>
         <jackson.version>2.9.6</jackson.version>
         <sentry.version>1.7.5</sentry.version>
@@ -45,18 +38,6 @@
             <groupId>com.github.queer</groupId>
             <artifactId>catnip-utilities</artifactId>
             <version>${catnip-utilities.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>com.github.queer</groupId>
-            <artifactId>catnip-rxjava2</artifactId>
-            <version>${catnip-rxjava2.version}</version>
-        </dependency>
-
-        <!-- lighthouse -->
-        <dependency>
-            <groupId>com.github.mewna</groupId>
-            <artifactId>lighthouse</artifactId>
-            <version>${lighthouse.version}</version>
         </dependency>
 
         <!-- singyeong -->

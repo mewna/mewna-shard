@@ -202,7 +202,7 @@ public final class MewnaShard {
                     }
                     // Since routing is effectively random, broadcast to maximize chance of the
                     // sender hearing it
-                    client.broadcast("mewna-backend", nonce, new QueryBuilder().build(), res);
+                    client.broadcast("backend", nonce, new QueryBuilder().build(), res);
                     break;
                 }
             }
@@ -243,7 +243,7 @@ public final class MewnaShard {
                             .put("guild", catnip.cache().guild(Objects.requireNonNull(msg.guildId())).toJson())
                             .put("user", msg.author().toJson())
                             .put("member", msg.member().toJson());
-                    client.send("mewna-backend", new QueryBuilder().build(), payload);
+                    client.send("backend", new QueryBuilder().build(), payload);
                 }
             }
         });
@@ -254,7 +254,7 @@ public final class MewnaShard {
                     .put("guild", catnip.cache().guild(member.guildId()).toJson())
                     .put("user", catnip.cache().user(member.id()).toJson())
                     .put("member", member.toJson());
-            client.send("mewna-backend", new QueryBuilder().build(), payload);
+            client.send("backend", new QueryBuilder().build(), payload);
             statsClient.gauge("members", catnip.cache().members().size());
             statsClient.gauge("users", catnip.cache().users().size());
         });
@@ -266,7 +266,7 @@ public final class MewnaShard {
                         .put("guild", catnip.cache().guild(member.guildId()).toJson())
                         .put("user", catnip.cache().user(member.id()).toJson())
                         .put("member", member.toJson());
-                client.send("mewna-backend", new QueryBuilder().build(), payload);
+                client.send("backend", new QueryBuilder().build(), payload);
                 statsClient.gauge("members", catnip.cache().members().size());
                 statsClient.gauge("users", catnip.cache().users().size());
             }
