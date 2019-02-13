@@ -13,6 +13,7 @@ import com.mewna.catnip.entity.user.User;
 import com.mewna.catnip.entity.user.VoiceState;
 import com.mewna.catnip.shard.DiscordEvent;
 import com.mewna.catnip.shard.DiscordEvent.Raw;
+import com.mewna.catnip.util.MissingPermissionException;
 import com.timgroup.statsd.NoOpStatsDClient;
 import com.timgroup.statsd.NonBlockingStatsDClient;
 import com.timgroup.statsd.StatsDClient;
@@ -96,8 +97,13 @@ public final class MewnaShard {
         if(d.containsKey("type")) {
             switch(d.getString("type").toUpperCase()) {
                 case "VOICE_JOIN": {
-                    mewna.catnips().get(guild2shard(d.getString("guild_id")))
-                            .openVoiceConnection(d.getString("guild_id"), d.getString("channel_id"));
+                    try {
+                        mewna.catnips().get(guild2shard(d.getString("guild_id")))
+                                .openVoiceConnection(d.getString("guild_id"), d.getString("channel_id"));
+                    } catch(final MissingPermissionException e) {
+                        catnip.logAdapter().warn("Can't join voice in guild {}: No {} permission(s)",
+                                d.getString("guild_id"), e.missing());
+                    }
                     break;
                 }
                 case "VOICE_LEAVE": {
