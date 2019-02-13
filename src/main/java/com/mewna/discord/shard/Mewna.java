@@ -50,12 +50,12 @@ public final class Mewna {
             catnips.put(i, catnip);
             new MewnaShard(this, catnip).start();
             logger.info("Started shard {} / {}", i, count);
-            try {
-                Thread.sleep(6500L);
-            } catch(final InterruptedException e) {
-                Sentry.capture(e);
-            }
             if(i < count - 1) {
+                try {
+                    Thread.sleep(6500L);
+                } catch(final InterruptedException e) {
+                    Sentry.capture(e);
+                }
                 logger.info("Preparing to start shard {} / {}", i + 1, count);
             } else {
                 logger.info("Finished booting shards! :tada:");

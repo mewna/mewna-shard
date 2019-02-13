@@ -72,8 +72,7 @@ public final class MewnaShard {
                 .thenAccept(__ -> {
                     client.onEvent(this::handleSingyeongDispatch);
                     client.onInvalid(invalid -> {
-                        logger.warn("Got invalid:");
-                        logger.warn(invalid.reason());
+                        logger.warn("Got invalid: {}", invalid.reason());
                     });
                     logger.info("Starting catnip!");
                     registerHandlers(catnip);

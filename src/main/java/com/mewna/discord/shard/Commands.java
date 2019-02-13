@@ -5,7 +5,6 @@ import com.google.common.collect.Lists;
 import com.mewna.catnip.entity.channel.Channel;
 import com.mewna.catnip.entity.channel.GuildChannel;
 import com.mewna.catnip.entity.guild.Guild;
-import com.mewna.catnip.entity.guild.Role;
 import com.mewna.catnip.entity.user.User;
 import gg.amy.catnip.utilities.menu.MenuExtension;
 import gg.amy.catnip.utilities.typesafeCommands.Command;
@@ -14,9 +13,7 @@ import gg.amy.catnip.utilities.typesafeCommands.Context;
 import java.lang.management.ManagementFactory;
 import java.lang.management.MemoryUsage;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.List;
-import java.util.Objects;
 import java.util.stream.Collectors;
 
 /**
@@ -90,7 +87,7 @@ public class Commands {
                     data.add(String.format("#%s (%s - %s)", gc.name(), gc.guildId(), gc.id()));
                 });
             }
-    
+            
             final List<String> pages = Lists.partition(data, 10).stream()
                     .map(e -> "```\n" + String.join("\n", e) + "\n```")
                     .collect(Collectors.toList());

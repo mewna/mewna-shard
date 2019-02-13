@@ -18,9 +18,9 @@
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 
-        <catnip.version>0.13.3</catnip.version>
+        <catnip.version>0.14.0</catnip.version>
         <catnip-utilities.version>61cd9bd</catnip-utilities.version>
-        <singyeong.version>f5889b7</singyeong.version>
+        <singyeong.version>9ec6433</singyeong.version>
         <logback.version>1.2.3</logback.version>
         <jackson.version>2.9.6</jackson.version>
         <sentry.version>1.7.5</sentry.version>
@@ -30,7 +30,7 @@
     <dependencies>
         <!-- catnip -->
         <dependency>
-            <groupId>com.github.mewna</groupId>
+            <groupId>com.mewna</groupId>
             <artifactId>catnip</artifactId>
             <version>${catnip.version}</version>
         </dependency>
