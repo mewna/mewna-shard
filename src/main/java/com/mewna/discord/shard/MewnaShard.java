@@ -45,7 +45,7 @@ import java.util.stream.Collectors;
  */
 @Accessors(fluent = true)
 @SuppressWarnings("unused")
-public final class MewnaShard {
+final class MewnaShard {
     private final Logger logger = LoggerFactory.getLogger(getClass());
     private final Mewna mewna;
     @Getter
@@ -72,9 +72,7 @@ public final class MewnaShard {
         client.connect()
                 .thenAccept(__ -> {
                     client.onEvent(this::handleSingyeongDispatch);
-                    client.onInvalid(invalid -> {
-                        logger.warn("Got invalid: {}", invalid.reason());
-                    });
+                    client.onInvalid(invalid -> logger.warn("Got invalid: {}", invalid.reason()));
                     logger.info("Starting catnip!");
                     registerHandlers(catnip);
                     catnip.connect();
