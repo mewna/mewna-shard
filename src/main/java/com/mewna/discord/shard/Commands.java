@@ -5,7 +5,6 @@ import com.google.common.collect.Lists;
 import com.mewna.catnip.entity.channel.Channel;
 import com.mewna.catnip.entity.channel.GuildChannel;
 import com.mewna.catnip.entity.guild.Guild;
-import com.mewna.catnip.entity.guild.Role;
 import com.mewna.catnip.entity.user.User;
 import gg.amy.catnip.utilities.menu.MenuExtension;
 import gg.amy.catnip.utilities.typesafeCommands.Command;
@@ -14,9 +13,8 @@ import gg.amy.catnip.utilities.typesafeCommands.Context;
 import java.lang.management.ManagementFactory;
 import java.lang.management.MemoryUsage;
 import java.util.ArrayList;
-import java.util.Collection;
+import java.util.Comparator;
 import java.util.List;
-import java.util.Objects;
 import java.util.stream.Collectors;
 
 /**
@@ -90,7 +88,7 @@ public class Commands {
                     data.add(String.format("#%s (%s - %s)", gc.name(), gc.guildId(), gc.id()));
                 });
             }
-    
+            
             final List<String> pages = Lists.partition(data, 10).stream()
                     .map(e -> "```\n" + String.join("\n", e) + "\n```")
                     .collect(Collectors.toList());
@@ -100,6 +98,19 @@ public class Commands {
                     .createPaginatedMenu("Search results:", ImmutableList.copyOf(pages))
                     .accept(ctx.source().author(), ctx.source().channelId());
         }
+    }
+    
+    @Command(names = "largest")
+    public void largest(final Context ctx) {
+        final List<Guild> guilds = ctx.catnip().cache().guilds().stream()
+                .sorted((g, h) -> Long.compare(h.memberCount(), g.memberCount()))
+                .limit(10).collect(Collectors.toList());
+        final StringBuilder sb = new StringBuilder("__Largest guilds__:\n```CSS\n");
+        for(final Guild g : guilds) {
+            sb.append('[').append(g.name()).append("] ").append(g.memberCount()).append('\n');
+        }
+        sb.append("```");
+        ctx.sendMessage(sb.toString());
     }
     
     private boolean exactlyOne(final Object... objects) {
