@@ -99,6 +99,19 @@ public class Commands {
         }
     }
     
+    @Command(names = "largest")
+    public void largest(final Context ctx) {
+        final List<Guild> guilds = ctx.catnip().cache().guilds().stream()
+                .sorted((g, h) -> Long.compare(h.memberCount(), g.memberCount()))
+                .limit(10).collect(Collectors.toList());
+        final StringBuilder sb = new StringBuilder("__Largest guilds__:\n```CSS\n");
+        for(final Guild g : guilds) {
+            sb.append('[').append(g.name()).append("] ").append(g.memberCount()).append('\n');
+        }
+        sb.append("```");
+        ctx.sendMessage(sb.toString());
+    }
+    
     private boolean exactlyOne(final Object... objects) {
         int nonnull = 0;
         for(final Object o : objects) {
