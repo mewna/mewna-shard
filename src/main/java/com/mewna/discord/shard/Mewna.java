@@ -59,6 +59,7 @@ public final class Mewna {
                 logger.info("Preparing to start shard {} / {}", i + 1, count);
             } else {
                 logger.info("Finished booting shards! :tada:");
+                System.gc();
             }
         }
     }
