@@ -73,6 +73,7 @@ public final class Mewna {
                         .cacheFlags(EnumSet.of(CacheFlag.DROP_EMOJI, CacheFlag.DROP_GAME_STATUSES))
                         .shardManager(new DefaultShardManager(count, Collections.singletonList(id))),
                 Vertx.vertx(new VertxOptions()
+                        .setEventLoopPoolSize(2)
                         .setInternalBlockingPoolSize(5)
                         .setWorkerPoolSize(10)
                         .setClustered(false)
