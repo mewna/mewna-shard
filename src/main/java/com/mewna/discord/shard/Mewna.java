@@ -12,6 +12,8 @@ import com.mewna.catnip.entity.user.Presence.OnlineStatus;
 import com.mewna.catnip.shard.manager.DefaultShardManager;
 import io.sentry.Sentry;
 import io.vertx.core.Vertx;
+import io.vertx.core.VertxOptions;
+import io.vertx.core.eventbus.EventBusOptions;
 import lombok.Getter;
 import lombok.experimental.Accessors;
 import org.slf4j.Logger;
@@ -70,6 +72,10 @@ public final class Mewna {
                         .presence(Presence.of(OnlineStatus.ONLINE, Activity.of("mewna.com", ActivityType.PLAYING)))
                         .cacheFlags(EnumSet.of(CacheFlag.DROP_EMOJI, CacheFlag.DROP_GAME_STATUSES))
                         .shardManager(new DefaultShardManager(count, Collections.singletonList(id))),
-                Vertx.vertx());
+                Vertx.vertx(new VertxOptions()
+                        .setInternalBlockingPoolSize(5)
+                        .setWorkerPoolSize(10)
+                        .setClustered(false)
+                ));
     }
 }
