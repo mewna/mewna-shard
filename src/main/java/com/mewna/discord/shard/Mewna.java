@@ -13,7 +13,6 @@ import com.mewna.catnip.shard.manager.DefaultShardManager;
 import io.sentry.Sentry;
 import io.vertx.core.Vertx;
 import io.vertx.core.VertxOptions;
-import io.vertx.core.eventbus.EventBusOptions;
 import lombok.Getter;
 import lombok.experimental.Accessors;
 import org.slf4j.Logger;
@@ -70,7 +69,7 @@ public final class Mewna {
         return Catnip.catnip(new CatnipOptions(System.getenv("TOKEN"))
                         .cacheWorker(cache)
                         .presence(Presence.of(OnlineStatus.ONLINE, Activity.of("mewna.com", ActivityType.PLAYING)))
-                        .cacheFlags(EnumSet.of(CacheFlag.DROP_EMOJI, CacheFlag.DROP_GAME_STATUSES))
+                        .cacheFlags(EnumSet.of(CacheFlag.DROP_GAME_STATUSES))
                         .shardManager(new DefaultShardManager(count, Collections.singletonList(id))),
                 Vertx.vertx(new VertxOptions()
                         .setEventLoopPoolSize(2)
