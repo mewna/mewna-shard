@@ -69,7 +69,7 @@ public final class Mewna {
         return Catnip.catnip(new CatnipOptions(System.getenv("TOKEN"))
                         .cacheWorker(cache)
                         .presence(Presence.of(OnlineStatus.ONLINE, Activity.of("mewna.com", ActivityType.PLAYING)))
-                        .cacheFlags(EnumSet.of(CacheFlag.DROP_GAME_STATUSES))
+                        .cacheFlags(EnumSet.of(CacheFlag.DROP_GAME_STATUSES, CacheFlag.DROP_EMOJI))
                         .shardManager(new DefaultShardManager(count, Collections.singletonList(id))),
                 Vertx.vertx(new VertxOptions()
                         .setEventLoopPoolSize(2)
