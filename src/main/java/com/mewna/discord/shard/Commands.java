@@ -5,6 +5,7 @@ import com.google.common.collect.Lists;
 import com.mewna.catnip.entity.channel.Channel;
 import com.mewna.catnip.entity.channel.GuildChannel;
 import com.mewna.catnip.entity.guild.Guild;
+import com.mewna.catnip.entity.guild.Member;
 import com.mewna.catnip.entity.user.User;
 import gg.amy.catnip.utilities.menu.MenuExtension;
 import gg.amy.catnip.utilities.typesafeCommands.Command;
@@ -13,6 +14,7 @@ import gg.amy.catnip.utilities.typesafeCommands.Context;
 import java.lang.management.ManagementFactory;
 import java.lang.management.MemoryUsage;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -68,6 +70,10 @@ public class Commands {
             final List<String> data = new ArrayList<>();
             if(user != null) {
                 data.add(String.format("%s#%s (%s)", user.username(), user.discriminator(), user.id()));
+                final Collection<Member> matches = ctx.catnip().cache().members().find(m -> m.idAsLong() == user.idAsLong());
+                Lists.partition(new ArrayList<>(matches), 10).forEach(chunk ->
+                        chunk.forEach(m ->
+                                data.add(String.format("%s (%s)", m.guild().name(), m.guildId()))));
             }
             if(guild != null) {
                 data.add(String.format("%s (%s) in %s", guild.name(), guild.id(), guild.region()));

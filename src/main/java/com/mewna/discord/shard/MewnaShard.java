@@ -105,7 +105,6 @@ final class MewnaShard {
                     break;
                 }
                 case "VOICE_LEAVE": {
-                    //noinspection ConstantConditions
                     final JsonObject json = new JsonObject()
                             .put("type", "VOICE_LEAVE")
                             .put("guild_id", d.getString("guild_id"));
