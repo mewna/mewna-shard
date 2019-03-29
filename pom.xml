@@ -18,9 +18,9 @@
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 
-        <catnip.version>0.14.0</catnip.version>
-        <catnip-utilities.version>61cd9bd</catnip-utilities.version>
-        <singyeong.version>9ec6433</singyeong.version>
+        <catnip.version>1.1.0</catnip.version>
+        <catnip-utilities.version>360b876</catnip-utilities.version>
+        <singyeong.version>8dd40df</singyeong.version>
         <logback.version>1.2.3</logback.version>
         <jackson.version>2.9.6</jackson.version>
         <sentry.version>1.7.5</sentry.version>
