@@ -33,6 +33,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.annotation.Nonnull;
+import java.time.OffsetDateTime;
+import java.time.temporal.ChronoUnit;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
@@ -290,6 +292,20 @@ final class MewnaShard {
                             .put("token", vsu.token());
                     client.send("nekomimi", new QueryBuilder().build(), json);
                 }));
+        // Join help messages
+        // TODO: i18n???
+        catnip.on(DiscordEvent.GUILD_CREATE, guild -> {
+            final OffsetDateTime now = OffsetDateTime.now();
+            final long minutesBetween = ChronoUnit.MINUTES.between(now, guild.joinedAt());
+            if(Math.abs(minutesBetween) < 5) {
+                final String systemChannel = guild.systemChannelId();
+                if(systemChannel != null) {
+                    guild.textChannel(systemChannel).sendMessage("Thanks for adding me to your server!\n\n" +
+                            "Configuration is done through a web dashboard, which can be accessed by logging in at https://mewna.com/\n" +
+                            "Questions, feedback, and bug reports can be sent in the support server: https://discord.gg/UwdDN6r");
+                }
+            }
+        });
         // Update metadata
         catnip.on(DiscordEvent.GUILD_CREATE, e -> updateGuildMetadata(Raw.GUILD_CREATE));
         catnip.on(DiscordEvent.GUILD_DELETE, e -> updateGuildMetadata(Raw.GUILD_DELETE));
