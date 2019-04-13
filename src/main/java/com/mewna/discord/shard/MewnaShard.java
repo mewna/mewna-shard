@@ -11,15 +11,15 @@ import com.mewna.catnip.entity.guild.Role;
 import com.mewna.catnip.entity.message.MessageType;
 import com.mewna.catnip.entity.user.User;
 import com.mewna.catnip.entity.user.VoiceState;
+import com.mewna.catnip.rest.handler.RestChannel;
 import com.mewna.catnip.shard.DiscordEvent;
 import com.mewna.catnip.shard.DiscordEvent.Raw;
+import com.mewna.catnip.shard.buffer.CachingBuffer;
 import com.mewna.catnip.util.MissingPermissionException;
+import com.mewna.yangmal.Yangmal;
 import com.timgroup.statsd.NoOpStatsDClient;
 import com.timgroup.statsd.NonBlockingStatsDClient;
 import com.timgroup.statsd.StatsDClient;
-import gg.amy.catnip.utilities.menu.MenuExtension;
-import gg.amy.catnip.utilities.typesafeCommands.TypesafeCommandExtension;
-import gg.amy.catnip.utilities.typesafeCommands.parse.impl.UnixArgParser;
 import gg.amy.singyeong.Dispatch;
 import gg.amy.singyeong.QueryBuilder;
 import gg.amy.singyeong.SingyeongClient;
@@ -33,13 +33,16 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.annotation.Nonnull;
+import java.lang.reflect.Field;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.time.OffsetDateTime;
 import java.time.temporal.ChronoUnit;
-import java.util.Collection;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Objects;
+import java.util.*;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
+
+import static java.util.concurrent.CompletableFuture.completedFuture;
 
 /**
  * @author amy
@@ -70,7 +73,7 @@ final class MewnaShard {
     
     void start() {
         logger.info("Starting Mewna shard...");
-        client = SingyeongClient.create(vertx, System.getenv("SINGYEONG_DSN"));
+        client = SingyeongClient.create(vertx, System.getenv("SINGYEONG_DSN"), Utils.ip() + ':' + mewna.port());
         client.connect()
                 .thenAccept(__ -> {
                     client.onEvent(this::handleSingyeongDispatch);
@@ -221,9 +224,21 @@ final class MewnaShard {
         handlersRegistered = true;
         
         catnip.loadExtension(new EventInspectorExtension(this))
-                .loadExtension(new TypesafeCommandExtension("amyware!", new UnixArgParser())
-                        .addPredicate(msg -> msg.author().id().equalsIgnoreCase("128316294742147072")))
-                .loadExtension(new MenuExtension())
+                .loadExtension(new Yangmal()
+                        .prefixSupplier(__ -> completedFuture(List.of("amyware.")))
+                        .addCommandCheck((ctx, msg) -> completedFuture(msg.author().id()
+                                .equalsIgnoreCase("128316294742147072"))
+                        )
+                        .addContextHook((ctx, msg) -> {
+                            ctx.param(ContextParams.GUILD, msg.guildId())
+                                    .param(ContextParams.CHANNEL, msg.channelId())
+                                    .param(ContextParams.USER, msg.author());
+                            return completedFuture(null);
+                        })
+                        .registerContextService(Catnip.class, catnip)
+                        .registerContextService(RestChannel.class, catnip.rest().channel())
+                        .setup()
+                )
         ;
         
         catnip.on(DiscordEvent.READY, ready -> {
@@ -233,6 +248,52 @@ final class MewnaShard {
             readyGuilds.clear();
             readyGuilds.addAll(ready.guilds().stream().map(Snowflake::id).collect(Collectors.toList()));
             updateGuildMetadata(ready.guilds().stream().map(Snowflake::id).collect(Collectors.toList()));
+            
+            final int id = List.copyOf(catnip.shardManager().shardIds()).get(0);
+            
+            // Yeah I know...
+            // Basically, we have an issue where guilds might get stuck
+            // sometimes - the reason for this is beyond me, frankly. This
+            // "solves" the problem by just forcibly flushing the buffers if
+            // they seem to have gotten stuck.
+            final long delay = TimeUnit.MINUTES.toMillis(5);
+            catnip.vertx().setTimer(delay, __ -> {
+                try {
+                    final CachingBuffer buffer = (CachingBuffer) catnip.eventBuffer();
+                    final Field buffersField = CachingBuffer.class.getDeclaredField("buffers");
+                    buffersField.setAccessible(true);
+                    @SuppressWarnings("unchecked")
+                    final var buffers = (Map<Integer, Object>) buffersField.get(buffer);
+                    final Object bufferState = buffers.get(id);
+                    final Field guildBuffersField = bufferState.getClass().getDeclaredField("guildBuffers");
+                    guildBuffersField.setAccessible(true);
+                    @SuppressWarnings("unchecked")
+                    final var guildBuffers = (Map<String, Deque<JsonObject>>) guildBuffersField.get(bufferState);
+                    catnip.logAdapter().info("Shard {}: Detected {} remaining event buffers after {}ms.",
+                            id, guildBuffers.size(), delay);
+                    if(!guildBuffers.isEmpty()) {
+                        catnip.logAdapter().info("Shard {}: Flushing {} remaining event buffers!",
+                                id, guildBuffers.size());
+                        final Method receiveGuild = bufferState.getClass().getDeclaredMethod("receiveGuild", String.class);
+                        final Method replayGuild = bufferState.getClass().getDeclaredMethod("replayGuild", String.class);
+                        final Method replay = bufferState.getClass().getDeclaredMethod("replay");
+                        receiveGuild.setAccessible(true);
+                        replayGuild.setAccessible(true);
+                        replay.setAccessible(true);
+                        guildBuffers.keySet().forEach(guildId -> {
+                            try {
+                                receiveGuild.invoke(bufferState, guildId);
+                                replayGuild.invoke(bufferState, guildId);
+                            } catch(final IllegalAccessException | InvocationTargetException e) {
+                                e.printStackTrace();
+                            }
+                        });
+                        replay.invoke(bufferState);
+                    }
+                } catch(final NoSuchFieldException | InvocationTargetException | NoSuchMethodException | IllegalAccessException e) {
+                    e.printStackTrace();
+                }
+            });
         });
         // Push events to backend
         catnip.on(DiscordEvent.MESSAGE_CREATE, msg -> {

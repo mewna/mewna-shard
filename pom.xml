@@ -18,9 +18,10 @@
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 
-        <catnip.version>1.2.0</catnip.version>
-        <catnip-utilities.version>360b876</catnip-utilities.version>
-        <singyeong.version>8dd40df</singyeong.version>
+        <catnip.version>1.2.1</catnip.version>
+        <vertx.version>3.7.0</vertx.version>
+        <singyeong.version>7c8ce56</singyeong.version>
+        <yangmal.version>7679a38</yangmal.version>
         <logback.version>1.2.3</logback.version>
         <jackson.version>2.9.6</jackson.version>
         <sentry.version>1.7.5</sentry.version>
@@ -36,8 +37,8 @@
         </dependency>
         <dependency>
             <groupId>com.github.queer</groupId>
-            <artifactId>catnip-utilities</artifactId>
-            <version>${catnip-utilities.version}</version>
+            <artifactId>yangmal</artifactId>
+            <version>${yangmal.version}</version>
         </dependency>
 
         <!-- singyeong -->
@@ -71,6 +72,19 @@
             <groupId>com.fasterxml.jackson.core</groupId>
             <artifactId>jackson-databind</artifactId>
             <version>${jackson.version}</version>
+        </dependency>
+
+        <!-- vert.x web server -->
+        <dependency>
+            <groupId>io.vertx</groupId>
+            <artifactId>vertx-web</artifactId>
+            <version>${vertx.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>io.vertx</groupId>
+            <artifactId>vertx-web</artifactId>
+            <version>${vertx.version}</version>
+            <classifier>sources</classifier>
         </dependency>
 
         <!-- Sentry -->

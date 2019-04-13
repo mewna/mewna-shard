@@ -21,7 +21,9 @@ import org.slf4j.LoggerFactory;
 import java.util.Collections;
 import java.util.EnumSet;
 import java.util.Map;
+import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.TimeUnit;
 
 /**
  * @author infinity
@@ -32,6 +34,8 @@ public final class Mewna {
     private final Logger logger = LoggerFactory.getLogger(getClass());
     @Getter
     private final Map<Integer, Catnip> catnips = new ConcurrentHashMap<>();
+    @Getter
+    private final int port = Integer.parseInt(Optional.ofNullable(System.getenv("PORT")).orElse("80"));
     
     public static void main(final String[] args) {
         new Mewna().start();
@@ -41,9 +45,12 @@ public final class Mewna {
         if(System.getenv("SENTRY_DSN") != null) {
             Sentry.init(System.getenv("SENTRY_DSN"));
         }
-        
-        final EntityCacheWorker sharedCache = new UnifiedMemoryEntityCache();
+    
         final int count = Integer.parseInt(System.getenv("SHARD_COUNT"));
+        new API(this, count).start();
+        logger.info("Started API!");
+    
+        final EntityCacheWorker sharedCache = new UnifiedMemoryEntityCache();
         logger.info("Will be starting {} shards!", count);
         
         for(int i = 0; i < count; i++) {
@@ -70,12 +77,12 @@ public final class Mewna {
                         .cacheWorker(cache)
                         .presence(Presence.of(OnlineStatus.ONLINE, Activity.of("mewna.com", ActivityType.PLAYING)))
                         .cacheFlags(EnumSet.of(CacheFlag.DROP_GAME_STATUSES, CacheFlag.DROP_EMOJI))
+                        .memberChunkTimeout(TimeUnit.MINUTES.toMillis(1))
                         .shardManager(new DefaultShardManager(count, Collections.singletonList(id))),
                 Vertx.vertx(new VertxOptions()
                         .setEventLoopPoolSize(2)
                         .setInternalBlockingPoolSize(5)
                         .setWorkerPoolSize(10)
-                        .setClustered(false)
                 ));
     }
 }
