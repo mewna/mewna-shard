@@ -18,10 +18,12 @@
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 
-        <catnip.version>1.2.1</catnip.version>
+        <catnip.version>1.2.3</catnip.version>
         <vertx.version>3.7.0</vertx.version>
         <singyeong.version>7c8ce56</singyeong.version>
         <yangmal.version>7679a38</yangmal.version>
+        <msgpack.version>0.8.16</msgpack.version>
+        <lettuce.version>5.1.6.RELEASE</lettuce.version>
         <logback.version>1.2.3</logback.version>
         <jackson.version>2.9.6</jackson.version>
         <sentry.version>1.7.5</sentry.version>
@@ -46,6 +48,25 @@
             <groupId>com.github.singyeong</groupId>
             <artifactId>java-client</artifactId>
             <version>${singyeong.version}</version>
+        </dependency>
+
+        <!-- MessagePack -->
+        <dependency>
+            <groupId>org.msgpack</groupId>
+            <artifactId>msgpack-core</artifactId>
+            <version>${msgpack.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.msgpack</groupId>
+            <artifactId>jackson-dataformat-msgpack</artifactId>
+            <version>${msgpack.version}</version>
+        </dependency>
+
+        <!-- lettuce -->
+        <dependency>
+            <groupId>io.lettuce</groupId>
+            <artifactId>lettuce-core</artifactId>
+            <version>${lettuce.version}</version>
         </dependency>
 
         <!-- logback -->
@@ -79,12 +100,6 @@
             <groupId>io.vertx</groupId>
             <artifactId>vertx-web</artifactId>
             <version>${vertx.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>io.vertx</groupId>
-            <artifactId>vertx-web</artifactId>
-            <version>${vertx.version}</version>
-            <classifier>sources</classifier>
         </dependency>
 
         <!-- Sentry -->

@@ -1,14 +1,13 @@
 package com.mewna.discord.shard;
 
 import com.mewna.catnip.Catnip;
-import com.mewna.catnip.entity.guild.Guild;
+import com.mewna.catnip.entity.channel.GuildChannel;
+import com.mewna.catnip.entity.user.User;
 import com.mewna.catnip.rest.handler.RestChannel;
 import com.mewna.yangmal.Command;
 import com.mewna.yangmal.context.Context;
 
 import java.lang.management.ManagementFactory;
-import java.util.List;
-import java.util.stream.Collectors;
 
 import static com.mewna.discord.shard.ContextParams.CHANNEL;
 
@@ -47,33 +46,14 @@ public class Commands {
         ctx.service(RestChannel.class).ifPresent(c -> c.sendMessage(ctx.param(CHANNEL), out));
     }
     
-    @Command(names = "stats", description = "")
-    public void stats(final Context ctx) {
-        @SuppressWarnings("OptionalGetWithoutIsPresent")
+    @Command(names = "cachecheck", description = "")
+    @SuppressWarnings("OptionalGetWithoutIsPresent")
+    public void meme(final Context ctx) {
         final var catnip = ctx.service(Catnip.class).get();
-        final var out = "Stats:\n" +
-                "```CSS\n" +
-                "  [guilds] " + catnip.cache().guilds().size() + '\n' +
-                "   [users] " + catnip.cache().users().size() + '\n' +
-                " [members] " + catnip.cache().members().size() + '\n' +
-                "[channels] " + catnip.cache().channels().size() + '\n' +
-                "   [roles] " + catnip.cache().roles().size() + '\n' +
-                "```";
-        ctx.service(RestChannel.class).ifPresent(c -> c.sendMessage(ctx.param(CHANNEL), out));
-    }
-    
-    @Command(names = "largest", description = "")
-    public void largest(final Context ctx) {
-        @SuppressWarnings("OptionalGetWithoutIsPresent")
-        final var catnip = ctx.service(Catnip.class).get();
-        final List<Guild> guilds = catnip.cache().guilds().stream()
-                .sorted((g, h) -> Long.compare(h.memberCount(), g.memberCount()))
-                .limit(10).collect(Collectors.toList());
-        final StringBuilder sb = new StringBuilder("__Largest guilds__:\n```CSS\n");
-        for(final Guild g : guilds) {
-            sb.append('[').append(g.name()).append("] ").append(g.memberCount()).append('\n');
-        }
-        sb.append("```");
-        ctx.service(RestChannel.class).ifPresent(c -> c.sendMessage(ctx.param(CHANNEL), sb.toString()));
+        final var rest = ctx.service(RestChannel.class).get();
+        final User user = catnip.cache().user("128316294742147072");
+        rest.sendMessage(ctx.param(CHANNEL), "```Javascript\n" + user.toJson().encodePrettily() + "\n```");
+        final GuildChannel channel = catnip.cache().channel("267500017260953601", "435086116433952768");
+        rest.sendMessage(ctx.param(CHANNEL), "```Javascript\n" + channel.toJson().encodePrettily() + "\n```");
     }
 }

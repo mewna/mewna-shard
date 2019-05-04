@@ -3,16 +3,16 @@ package com.mewna.discord.shard;
 import com.mewna.catnip.Catnip;
 import com.mewna.catnip.CatnipOptions;
 import com.mewna.catnip.cache.CacheFlag;
-import com.mewna.catnip.cache.EntityCacheWorker;
-import com.mewna.catnip.cache.UnifiedMemoryEntityCache;
 import com.mewna.catnip.entity.user.Presence;
 import com.mewna.catnip.entity.user.Presence.Activity;
 import com.mewna.catnip.entity.user.Presence.ActivityType;
 import com.mewna.catnip.entity.user.Presence.OnlineStatus;
 import com.mewna.catnip.shard.manager.DefaultShardManager;
+import com.mewna.discord.shard.cache.RedisCacheExtension;
 import io.sentry.Sentry;
 import io.vertx.core.Vertx;
 import io.vertx.core.VertxOptions;
+import io.vertx.core.dns.AddressResolverOptions;
 import lombok.Getter;
 import lombok.experimental.Accessors;
 import org.slf4j.Logger;
@@ -45,16 +45,14 @@ public final class Mewna {
         if(System.getenv("SENTRY_DSN") != null) {
             Sentry.init(System.getenv("SENTRY_DSN"));
         }
-    
+        
         final int count = Integer.parseInt(System.getenv("SHARD_COUNT"));
+        logger.info("Starting API...");
         new API(this, count).start();
-        logger.info("Started API!");
-    
-        final EntityCacheWorker sharedCache = new UnifiedMemoryEntityCache();
         logger.info("Will be starting {} shards!", count);
         
         for(int i = 0; i < count; i++) {
-            final Catnip catnip = provideCatnip(i, count, sharedCache);
+            final Catnip catnip = provideCatnip(i, count);
             catnips.put(i, catnip);
             new MewnaShard(this, catnip).start();
             logger.info("Started shard {} / {}", i, count);
@@ -72,9 +70,10 @@ public final class Mewna {
         }
     }
     
-    private Catnip provideCatnip(final int id, final int count, final EntityCacheWorker cache) {
+    private Catnip provideCatnip(final int id, final int count) {
         return Catnip.catnip(new CatnipOptions(System.getenv("TOKEN"))
-                        .cacheWorker(cache)
+                        // .cacheWorker(cache)
+                        .memberChunkTimeout(TimeUnit.MINUTES.toMillis(10))
                         .presence(Presence.of(OnlineStatus.ONLINE, Activity.of("mewna.com", ActivityType.PLAYING)))
                         .cacheFlags(EnumSet.of(CacheFlag.DROP_GAME_STATUSES, CacheFlag.DROP_EMOJI))
                         .memberChunkTimeout(TimeUnit.MINUTES.toMillis(1))
@@ -83,6 +82,11 @@ public final class Mewna {
                         .setEventLoopPoolSize(2)
                         .setInternalBlockingPoolSize(5)
                         .setWorkerPoolSize(10)
-                ));
+                        .setAddressResolverOptions(
+                                // Work around stupid kubernetes DNS failure modes
+                                new AddressResolverOptions().setQueryTimeout(30_000L))
+                ))
+                .loadExtension(new RedisCacheExtension(System.getenv("REDIS_DSN")))
+                ;
     }
 }

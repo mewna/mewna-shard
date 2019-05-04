@@ -1,7 +1,6 @@
 package com.mewna.discord.shard;
 
 import com.mewna.catnip.entity.Entity;
-import com.mewna.catnip.entity.channel.Category;
 import com.mewna.catnip.entity.channel.TextChannel;
 import com.mewna.catnip.entity.channel.VoiceChannel;
 import com.mewna.catnip.entity.guild.Guild;
@@ -78,13 +77,15 @@ class API {
         router.get("/cache/guild/:guild/channels/text").handler(ctx -> {
             try {
                 final String id = ctx.pathParam("guild");
-                final Guild guild = mewna.catnips().get(shardIdFor(id)).cache().guild(id);
-    
-                final List<JsonObject> collect = guild.channels().stream()
+                
+                final List<JsonObject> collect = mewna.catnips().get(shardIdFor(id))
+                        .cache()
+                        .channels(id)
+                        .stream()
                         .filter(e -> e instanceof TextChannel)
                         .map(Entity::toJson)
                         .collect(Collectors.toList());
-    
+                
                 ctx.response().end(new JsonArray(collect).encode());
             } catch(final NullPointerException e) {
                 ctx.response().setStatusCode(404).end(new JsonArray().encode());
@@ -95,7 +96,7 @@ class API {
             try {
                 final String guild = ctx.pathParam("guild");
                 final String id = ctx.pathParam("id");
-                final TextChannel channel = mewna.catnips().get(shardIdFor(guild)).cache().guild(guild).textChannel(id);
+                final TextChannel channel = mewna.catnips().get(shardIdFor(guild)).cache().channel(guild, id).asTextChannel();
                 if(channel != null) {
                     ctx.response().end(channel.toJson().encode());
                 } else {
@@ -110,7 +111,7 @@ class API {
             try {
                 final String guild = ctx.pathParam("guild");
                 final String id = ctx.pathParam("id");
-                final VoiceChannel channel = mewna.catnips().get(shardIdFor(guild)).cache().guild(guild).voiceChannel(id);
+                final VoiceChannel channel = mewna.catnips().get(shardIdFor(guild)).cache().channel(guild, id).asVoiceChannel();
                 if(channel != null) {
                     ctx.response().end(channel.toJson().encode());
                 } else {
@@ -124,12 +125,14 @@ class API {
         router.get("/cache/guild/:guild/roles").handler(ctx -> {
             try {
                 final String id = ctx.pathParam("guild");
-                final Guild guild = mewna.catnips().get(shardIdFor(id)).cache().guild(id);
-    
-                final List<JsonObject> collect = guild.roles().stream()
+                
+                final List<JsonObject> collect = mewna.catnips().get(shardIdFor(id))
+                        .cache()
+                        .roles(id)
+                        .stream()
                         .map(Entity::toJson)
                         .collect(Collectors.toList());
-    
+                
                 ctx.response().end(new JsonArray(collect).encode());
             } catch(final NullPointerException e) {
                 ctx.response().setStatusCode(404).end(new JsonArray().encode());
@@ -140,7 +143,7 @@ class API {
             try {
                 final String guild = ctx.pathParam("guild");
                 final String id = ctx.pathParam("id");
-                final Role role = mewna.catnips().get(shardIdFor(guild)).cache().guild(guild).role(id);
+                final Role role = mewna.catnips().get(shardIdFor(guild)).cache().role(guild, id);
                 if(role != null) {
                     ctx.response().end(role.toJson().encode());
                 } else {
@@ -150,12 +153,12 @@ class API {
                 ctx.response().setStatusCode(404).end(new JsonObject().encode());
             }
         });
-    
+        
         router.get("/cache/guild/:guild/member/:id").handler(ctx -> {
             try {
                 final String guild = ctx.pathParam("guild");
                 final String id = ctx.pathParam("id");
-                final Member member = mewna.catnips().get(shardIdFor(guild)).cache().guild(guild).member(id);
+                final Member member = mewna.catnips().get(shardIdFor(guild)).cache().member(guild, id);
                 if(member != null) {
                     ctx.response().end(member.toJson().encode());
                 } else {
@@ -165,7 +168,7 @@ class API {
                 ctx.response().setStatusCode(404).end(new JsonObject().encode());
             }
         });
-    
+        
         router.get("/cache/guild/:guild/member/:id/voiceState").handler(ctx -> {
             try {
                 final String guild = ctx.pathParam("guild");
