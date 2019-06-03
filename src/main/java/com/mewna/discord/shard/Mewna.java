@@ -46,9 +46,9 @@ public final class Mewna {
             Sentry.init(System.getenv("SENTRY_DSN"));
         }
         
+        // TODO: Add distribution helpers
+        
         final int count = Integer.parseInt(System.getenv("SHARD_COUNT"));
-        logger.info("Starting API...");
-        new API(this, count).start();
         logger.info("Will be starting {} shards!", count);
         
         for(int i = 0; i < count; i++) {
