@@ -1,15 +1,8 @@
 package com.mewna.discord.shard;
 
 import com.mewna.catnip.Catnip;
-import com.mewna.catnip.entity.Entity;
 import com.mewna.catnip.entity.Snowflake;
-import com.mewna.catnip.entity.channel.Channel;
-import com.mewna.catnip.entity.channel.GuildChannel;
-import com.mewna.catnip.entity.guild.Guild;
-import com.mewna.catnip.entity.guild.Member;
-import com.mewna.catnip.entity.guild.Role;
 import com.mewna.catnip.entity.message.MessageType;
-import com.mewna.catnip.entity.user.User;
 import com.mewna.catnip.entity.user.VoiceState;
 import com.mewna.catnip.rest.handler.RestChannel;
 import com.mewna.catnip.shard.DiscordEvent;
@@ -20,10 +13,10 @@ import com.mewna.yangmal.Yangmal;
 import com.timgroup.statsd.NoOpStatsDClient;
 import com.timgroup.statsd.NonBlockingStatsDClient;
 import com.timgroup.statsd.StatsDClient;
-import gg.amy.singyeong.Dispatch;
-import gg.amy.singyeong.QueryBuilder;
 import gg.amy.singyeong.SingyeongClient;
-import gg.amy.singyeong.SingyeongType;
+import gg.amy.singyeong.client.SingyeongType;
+import gg.amy.singyeong.client.query.QueryBuilder;
+import gg.amy.singyeong.data.Dispatch;
 import io.vertx.core.Vertx;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
@@ -114,102 +107,10 @@ final class MewnaShard {
                             .put("type", "VOICE_LEAVE")
                             .put("guild_id", d.getString("guild_id"));
                     //logger.info("Sending to nekomimi node:\n{}", json.encodePrettily());
-                    client.send("nekomimi", new QueryBuilder().build(), json);
+                    client.send(new QueryBuilder().target("nekomimi").build(), json);
                     
                     mewna.catnips().get(guild2shard(d.getString("guild_id")))
                             .closeVoiceConnection(d.getString("guild_id"));
-                    break;
-                }
-                case "CACHE": {
-                    final JsonObject query = d.getJsonObject("query");
-                    final String mode = query.getString("mode", null);
-                    
-                    final JsonObject res;
-                    {
-                        final String id = query.getString("id", null);
-                        final String guildId = query.getString("guild", null);
-                        switch(mode) {
-                            // Single lookups
-                            case "channel": {
-                                final Channel channel = catnip.cache().channel(guildId, id);
-                                if(channel != null) {
-                                    res = channel.toJson();
-                                } else {
-                                    res = new JsonObject();
-                                }
-                                break;
-                            }
-                            case "guild": {
-                                final Guild guild = catnip.cache().guild(id);
-                                if(guild != null) {
-                                    res = guild.toJson();
-                                } else {
-                                    res = new JsonObject();
-                                }
-                                break;
-                            }
-                            case "role": {
-                                final Role role = catnip.cache().role(guildId, id);
-                                if(role != null) {
-                                    res = role.toJson();
-                                } else {
-                                    res = new JsonObject();
-                                }
-                                break;
-                            }
-                            case "user": {
-                                final User user = catnip.cache().user(id);
-                                if(user != null) {
-                                    res = user.toJson();
-                                } else {
-                                    res = new JsonObject();
-                                }
-                                break;
-                            }
-                            case "member": {
-                                final Member member = catnip.cache().member(guildId, id);
-                                if(member != null) {
-                                    res = member.toJson();
-                                } else {
-                                    res = new JsonObject();
-                                }
-                                break;
-                            }
-                            case "voice-state": {
-                                final VoiceState voiceState = catnip.cache().voiceState(guildId, id);
-                                if(voiceState != null) {
-                                    res = voiceState.toJson();
-                                } else {
-                                    res = new JsonObject();
-                                }
-                                break;
-                            }
-                            // Multiple lookups
-                            case "channels": {
-                                final Collection<GuildChannel> channels = catnip.cache().channels(id).snapshot();
-                                res = new JsonObject()
-                                        .put("_type", "channels")
-                                        .put("_data", channels.stream().map(Entity::toJson).collect(Collectors.toList()))
-                                ;
-                                break;
-                            }
-                            case "roles": {
-                                final Collection<Role> roles = catnip.cache().roles(id).snapshot();
-                                res = new JsonObject()
-                                        .put("_type", "roles")
-                                        .put("_data", roles.stream().map(Entity::toJson).collect(Collectors.toList()))
-                                ;
-                                break;
-                            }
-                            default: {
-                                res = new JsonObject();
-                                break;
-                            }
-                        }
-                    }
-                    // Since routing is effectively random, broadcast to maximize chance of the
-                    // sender hearing it
-                    client.broadcast("backend", nonce, new QueryBuilder().build(), res);
                     break;
                 }
             }
@@ -308,7 +209,7 @@ final class MewnaShard {
                             .put("guild", catnip.cache().guild(Objects.requireNonNull(msg.guildId())).toJson())
                             .put("user", msg.author().toJson())
                             .put("member", msg.member().toJson());
-                    client.send("backend", new QueryBuilder().build(), payload);
+                    client.send(new QueryBuilder().target("backend").build(), payload);
                 }
             }
         });
@@ -319,7 +220,7 @@ final class MewnaShard {
                     .put("guild", catnip.cache().guild(member.guildId()).toJson())
                     .put("user", catnip.cache().user(member.id()).toJson())
                     .put("member", member.toJson());
-            client.send("backend", new QueryBuilder().build(), payload);
+            client.send(new QueryBuilder().target("backend").build(), payload);
             statsClient.gauge("members", catnip.cache().members().size());
             statsClient.gauge("users", catnip.cache().users().size());
         });
@@ -331,7 +232,7 @@ final class MewnaShard {
                         .put("guild", catnip.cache().guild(member.guildId()).toJson())
                         .put("user", catnip.cache().user(member.id()).toJson())
                         .put("member", member.toJson());
-                client.send("backend", new QueryBuilder().build(), payload);
+                client.send(new QueryBuilder().target("backend").build(), payload);
                 statsClient.gauge("members", catnip.cache().members().size());
                 statsClient.gauge("users", catnip.cache().users().size());
             }
@@ -351,7 +252,7 @@ final class MewnaShard {
                             .put("session_id", state.sessionId())
                             .put("endpoint", vsu.endpoint())
                             .put("token", vsu.token());
-                    client.send("nekomimi", new QueryBuilder().build(), json);
+                    client.send(new QueryBuilder().target("nekomimi").build(), json);
                 }));
         // Join help messages
         // TODO: i18n???

@@ -20,7 +20,7 @@
 
         <catnip.version>1.3.0</catnip.version>
         <vertx.version>3.7.0</vertx.version>
-        <singyeong.version>ab8e436</singyeong.version>
+        <singyeong.version>75ab2c5</singyeong.version>
         <yangmal.version>7679a38</yangmal.version>
         <msgpack.version>0.8.16</msgpack.version>
         <lettuce.version>5.1.6.RELEASE</lettuce.version>
