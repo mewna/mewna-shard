@@ -18,7 +18,7 @@ public class RedisCacheExtension extends AbstractExtension {
     }
     
     @Override
-    public void start() throws Exception {
+    public void start() {
         injectOptions(opts -> opts.cacheWorker(new MsgPackRedisCache(dsn)));
     }
 }

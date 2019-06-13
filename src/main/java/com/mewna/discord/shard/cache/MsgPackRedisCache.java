@@ -64,6 +64,7 @@ public class MsgPackRedisCache extends CustomizableEntityCache {
         redis = connection.async();
     }
     
+    @SuppressWarnings("DuplicateBranchesInSwitch")
     @Nonnull
     @Override
     public Future<Void> updateCache(@Nonnull final String eventType, final int shardId, @Nonnull final JsonObject payload) {
