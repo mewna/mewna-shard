@@ -228,7 +228,6 @@ final class MewnaShard {
         
         catnip.on(DiscordEvent.READY, ready -> {
             logger.info("Logged in as {}#{}", ready.user().username(), ready.user().discriminator());
-            logger.info("Trace: {}", ready.trace());
             logger.info("Received {} unavailable guilds.", ready.guilds().size());
             readyGuilds.clear();
             readyGuilds.addAll(ready.guilds().stream().map(Snowflake::id).collect(Collectors.toList()));
